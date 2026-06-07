@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary-blue);
+    outline-offset: 2px;
+  }
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    padding: 0.75rem 1rem;
+    background: var(--color-primary-blue);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+  }
+}
+
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .mobile-page-pad {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+}
+
+@theme {
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Sans", sans-serif;
+  --font-serif: "Instrument Sans", ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Brand semantic tokens (Tiket.com-inspired) */
+  --color-primary-yellow: #FED530;
+  --color-primary-yellow-hover: #F7C400;
+  --color-primary-blue: #0064D2;
+  --color-primary-blue-dark: #0050A0;
+  --color-accent-blue: #00A7E1;
+  --color-accent-blue-light: #40BFFF;
+  --color-soft-bg: #F4F7FA;
+  --color-charcoal-dark: #222222;
+  --color-charcoal-light: #333333;
+
+  --color-brand-primary: #0064D2;
+  --color-brand-primary-dark: #0050A0;
+  --color-brand-accent: #F7C400;
+  --color-brand-accent-hover: #D9A800;
+  --color-surface-hero: #002244;
+  --color-surface-page: #F4F7FA;
+  --color-whatsapp: #25D366;
+
+  --color-amber-300: #FFE169;
+  --color-amber-400: #FED530;
+  --color-amber-500: #F7C400;
+  --color-amber-600: #D9A800;
+
+  --color-slate-50: #F4F7FA;
+  --color-slate-100: #E4EBF4;
+  --color-slate-800: #333333;
+  --color-slate-900: #1C355E;
+  --color-slate-950: #002244;
+
+  --shadow-3xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+
+  --animate-fade-in: fade-in 0.4s ease-out forwards;
+  --animate-slide-in: slide-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

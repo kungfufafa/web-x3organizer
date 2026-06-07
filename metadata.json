@@ -1,0 +1,6 @@
+{
+  "name": "X3 Organizer CMS",
+  "description": "Website travel agent dan tour X3 ORGANIZER dengan desain mobile-first, paket trip, destinasi, dan blog SEO-friendly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
