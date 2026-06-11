@@ -1,0 +1,8 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keluarga Gunawan">
+  <rect width="160" height="160" rx="80" fill="#3B0764"/>
+  <circle cx="123" cy="37" r="48" fill="#A855F7" opacity=".8"/>
+  <circle cx="34" cy="124" r="56" fill="#22C55E" opacity=".75"/>
+  <circle cx="80" cy="70" r="27" fill="#F8FAFC"/>
+  <path d="M34 137c7-31 28-48 46-48s39 17 46 48" fill="#F8FAFC"/>
+  <text x="80" y="91" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#3B0764">KG</text>
+</svg>

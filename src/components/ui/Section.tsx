@@ -12,7 +12,7 @@ interface SectionProps {
 
 const bgClasses: Record<SectionBg, string> = {
   white: 'bg-white',
-  muted: 'bg-slate-50',
+  muted: 'bg-surface-page',
   dark: 'bg-slate-950 text-white',
   transparent: '',
 };
@@ -28,13 +28,15 @@ export const Section: React.FC<SectionProps> = ({
     <section
       id={id}
       className={[
-        'max-w-7xl mx-auto px-4 md:px-8 py-24 lg:py-32',
+        'w-full py-20 lg:py-28',
         bgClasses[bg],
-        bordered ? 'border-t border-slate-200' : '',
+        bordered ? 'border-t border-slate-100' : '',
         className,
       ].filter(Boolean).join(' ')}
     >
-      {children}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 w-full h-full">
+        {children}
+      </div>
     </section>
   );
 };

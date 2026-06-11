@@ -14,7 +14,6 @@ import {
  X, 
  Phone, 
  Share2, 
- Code, 
  Tag, 
  HelpCircle, 
  MessageSquare, 
@@ -36,8 +35,6 @@ import { LayananListingView, LayananDetailView } from './views/LayananViews';
 import { ProdukListingView, ProdukDetailView } from './views/ProdukViews';
 import { BlogListingView, BlogDetailView } from './views/BlogViews';
 
-// CMS DevTools Panel
-import DevTools from './components/DevTools';
 import StaticPageView from './views/StaticPageView';
 import { PaketTrip } from './types';
 import { usePageSeo } from './hooks/usePageSeo';
@@ -55,9 +52,6 @@ export default function App() {
  
  // Responsive Drawer Menu For Mobile
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
- 
- // DevTools Panel Visibility
- const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
 
  usePageSeo(currentPath);
 
@@ -204,14 +198,10 @@ export default function App() {
  <div className="min-h-[100dvh] text-slate-900 flex flex-col relative antialiased font-sans">
  <a href="#main-content" className="skip-link">Lewati ke konten utama</a>
 
-  {/* 2. REAL APP CONTENT LAYOUT - TWO GRID CONTAINER IF DEV SPLIT OPEN */}
-  <div className={`flex-1 flex flex-col lg:flex-row ${isDevToolsOpen ? 'divide-x divide-slate-800' : ''}`}>
- 
- {/* VIEWPORT CONTROLLER SIDE */}
- <div className={`flex-1 flex flex-col min-w-0 ${isDevToolsOpen ? 'lg:max-w-[55%] xl:max-w-[60%]' : 'w-full'}`}>
+ <div className="flex-1 flex flex-col min-w-0">
  
  {/* 3. HEADER COMPONENT (As requested) */}
- <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-sm transition-colors duration-150 ease-out py-3 px-4 md:px-8">
+ <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/92 backdrop-blur-md transition-colors duration-150 ease-out py-2 px-4 md:px-8 shadow-[0_1px_0_rgba(7,30,73,0.04)]">
  <div className="max-w-7xl mx-auto flex items-center justify-between">
  
  {/* Logo left */}
@@ -221,18 +211,18 @@ export default function App() {
  className="flex items-center gap-3 cursor-pointer group touch-target"
  aria-label="X3 Organizer — kembali ke beranda"
  >
- <img src="/logo.png" alt="" className="h-10 md:h-12 w-auto object-contain drop-shadow-sm transition-transform duration-300" />
+ <img src="/logo.png" alt="" className="h-8 md:h-9 w-auto object-contain drop-shadow-sm transition-transform duration-300" />
  </button>
 
  {/* Desktop menu center */}
- <nav className="hidden md:flex items-center gap-1" aria-label="Navigasi utama">
+ <nav className="hidden md:flex items-center gap-7" aria-label="Navigasi utama">
  <button 
  onClick={() => navigateTo('/')} 
  aria-current={pathMatches(currentPath, '/') ? 'page' : undefined}
- className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 ${
+ className={`relative px-0 py-4 text-[12px] font-bold transition-all duration-200 ${
  pathMatches(currentPath, '/') 
- ? 'bg-primary-blue/5 text-primary-blue font-bold shadow-3xs' 
- : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+ ? 'text-slate-950 after:absolute after:left-0 after:right-0 after:bottom-2 after:h-0.5 after:rounded-full after:bg-bgn-leaf' 
+ : 'text-slate-600 hover:text-slate-950'
  }`}
  >
  Home
@@ -240,10 +230,10 @@ export default function App() {
  <button 
  onClick={() => navigateTo('/layanan')} 
  aria-current={pathMatches(currentPath, '/layanan') ? 'page' : undefined}
- className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 ${
+ className={`relative px-0 py-4 text-[12px] font-bold transition-all duration-200 ${
  pathMatches(currentPath, '/layanan') 
- ? 'bg-primary-blue/5 text-primary-blue font-bold shadow-3xs' 
- : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+ ? 'text-slate-950 after:absolute after:left-0 after:right-0 after:bottom-2 after:h-0.5 after:rounded-full after:bg-bgn-leaf' 
+ : 'text-slate-600 hover:text-slate-950'
  }`}
  >
  Layanan
@@ -251,10 +241,10 @@ export default function App() {
  <button 
  onClick={() => navigateTo('/produk')} 
  aria-current={pathMatches(currentPath, '/produk') ? 'page' : undefined}
- className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 ${
+ className={`relative px-0 py-4 text-[12px] font-bold transition-all duration-200 ${
  pathMatches(currentPath, '/produk') 
- ? 'bg-primary-blue/5 text-primary-blue font-bold shadow-3xs' 
- : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+ ? 'text-slate-950 after:absolute after:left-0 after:right-0 after:bottom-2 after:h-0.5 after:rounded-full after:bg-bgn-leaf' 
+ : 'text-slate-600 hover:text-slate-950'
  }`}
  >
  Paket Trip
@@ -262,17 +252,17 @@ export default function App() {
  <button 
  onClick={() => navigateTo('/blog')} 
  aria-current={pathMatches(currentPath, '/blog') ? 'page' : undefined}
- className={`px-3.5 py-1.5 rounded-lg text-[13.5px] font-semibold transition-all duration-200 ${
+ className={`relative px-0 py-4 text-[12px] font-bold transition-all duration-200 ${
  pathMatches(currentPath, '/blog') 
- ? 'bg-primary-blue/5 text-primary-blue font-bold shadow-3xs' 
- : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+ ? 'text-slate-950 after:absolute after:left-0 after:right-0 after:bottom-2 after:h-0.5 after:rounded-full after:bg-bgn-leaf' 
+ : 'text-slate-600 hover:text-slate-950'
  }`}
  >
  Blog
  </button>
  </nav>
 
- {/* CTA WhatsApp right (Styled like Laravel search & Sign in/Auth UI) */}
+ {/* CTA WhatsApp right */}
  <div className="flex items-center gap-2">
  {/* TikTok Icon SVG Component */}
  {(() => {
@@ -287,7 +277,7 @@ export default function App() {
  href="https://www.instagram.com/x3organizer/"
  target="_blank"
  rel="noopener noreferrer"
- className="flex bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/85 hover:border-slate-300 py-2 px-2.5 rounded-lg items-center transition shadow-3xs cursor-pointer group"
+ className="flex bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/85 hover:border-slate-300 p-2 rounded-full items-center transition shadow-3xs cursor-pointer group"
  aria-label="Instagram"
  >
  <Instagram className="w-4 h-4 text-pink-600  transition-transform" />
@@ -296,7 +286,7 @@ export default function App() {
  href="https://www.tiktok.com/@x3organizer"
  target="_blank"
  rel="noopener noreferrer"
- className="flex bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/85 hover:border-slate-300 py-2 px-2.5 rounded-lg items-center transition shadow-3xs cursor-pointer group"
+ className="flex bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/85 hover:border-slate-300 p-2 rounded-full items-center transition shadow-3xs cursor-pointer group"
  aria-label="TikTok"
  >
  <TikTokIcon className="w-4 h-4 text-slate-900  transition-transform" />
@@ -305,19 +295,10 @@ export default function App() {
  );
  })()}
 
- <button
- onClick={() => setIsDevToolsOpen(!isDevToolsOpen)}
- className={`hidden lg:flex p-2 rounded-lg transition ${isDevToolsOpen ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
- aria-label="Toggle CMS DevTools"
- title="CMS DevTools"
- >
- <Code className="w-4 h-4" />
- </button>
-
  {/* Hamburger menu trigger for mobile drawer */}
  <button 
  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
- className="md:hidden touch-target p-2 text-slate-700 hover:bg-slate-50 rounded-lg transition"
+ className="md:hidden touch-target p-2 text-slate-700 hover:bg-slate-50 rounded-full transition"
  aria-label="Buka menu navigasi"
  aria-expanded={isMobileMenuOpen}
  aria-controls="mobile-nav-drawer">
@@ -541,22 +522,13 @@ export default function App() {
  {/* 7. FLOATING WHATSAPP BUTTON (persistent, non-obscured layout) */}
  <button
  onClick={handleGeneralWa}
- aria-label="Hubungi via WhatsApp" className="fixed max-md:bottom-[calc(90px+env(safe-area-inset-bottom))] md:bottom-6 right-6 bg-whatsapp hover:bg-emerald-600 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 z-[35] group ring-4 ring-whatsapp/20 hover:ring-whatsapp/40"
+ aria-label="Hubungi via WhatsApp" className="fixed max-md:bottom-[calc(90px+env(safe-area-inset-bottom))] md:bottom-10 right-6 md:right-10 bg-whatsapp hover:bg-emerald-600 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 z-[35] group ring-4 ring-whatsapp/20 hover:ring-whatsapp/40"
  >
  <Phone className="w-6 h-6 fill-current text-white block" />
  <span className="absolute bg-slate-900 text-white text-[10px] py-1 px-2.5 font-bold rounded-lg border border-slate-800 right-14 top-1.5 opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap">
  Hotline 24 Jam
  </span>
  </button>
-
- </div>
-
- {/* CMS / FILAMENT DEVELOPMENT BLUEPRINT SPLIT PANEL */}
- {isDevToolsOpen && (
- <div className="w-full lg:w-[45%] xl:w-[40%] bg-slate-900 overflow-y-hidden border-t lg:border-t-0 border-slate-800 shrink-0 h-[500px] lg:h-auto">
- <DevTools onClose={() => setIsDevToolsOpen(false)} />
- </div>
- )}
 
  </div>
 

@@ -30,8 +30,8 @@ export const Card: React.FC<CardProps> = ({
       : {};
 
   const baseClasses = [
-    'bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col',
-    hoverable ? 'hover:shadow-md hover:border-slate-300 transition-all duration-300' : '',
+    'bg-white rounded-lg border border-slate-100 shadow-sm flex flex-col',
+    hoverable ? 'hover:shadow-md hover:border-slate-200 transition-all duration-300' : '',
     onClick ? 'cursor-pointer' : '',
     className,
   ].filter(Boolean).join(' ');

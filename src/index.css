@@ -7,6 +7,9 @@
     overflow-x: hidden;
     width: 100%;
   }
+  body {
+    background: var(--color-surface-page);
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
@@ -48,6 +51,22 @@
   .mobile-page-pad {
     padding-bottom: calc(100px + env(safe-area-inset-bottom));
   }
+  .bgn-pattern-white {
+    background-image: url('/images/patterns/bgn-pattern4-white.png');
+    background-repeat: no-repeat;
+    background-size: min(34vw, 360px) auto;
+  }
+  .bgn-pattern-right-bottom {
+    background-position: right -72px bottom -38px;
+  }
+  .bgn-pattern-right-top {
+    background-position: right -74px top -42px;
+  }
+  .bgn-panel {
+    border: 1px solid var(--color-slate-100);
+    border-radius: 0.5rem;
+    box-shadow: 0 16px 40px -34px rgb(7 30 73 / 0.55);
+  }
 }
 
 @theme {
@@ -56,35 +75,64 @@
   --font-serif: "Instrument Sans", ui-serif, Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  /* Brand semantic tokens (Tiket.com-inspired) */
-  --color-primary-yellow: #FED530;
-  --color-primary-yellow-hover: #F7C400;
-  --color-primary-blue: #0064D2;
-  --color-primary-blue-dark: #0050A0;
-  --color-accent-blue: #00A7E1;
-  --color-accent-blue-light: #40BFFF;
-  --color-soft-bg: #F4F7FA;
-  --color-charcoal-dark: #222222;
-  --color-charcoal-light: #333333;
+  /* Brand semantic tokens (Badan Gizi Nasional-inspired) */
+  --color-bgn-navy: #071e49;
+  --color-bgn-leaf: #92d05d;
+  --color-bgn-sky: #b5e0ea;
+  --color-bgn-gold: #d1b06c;
 
-  --color-brand-primary: #0064D2;
-  --color-brand-primary-dark: #0050A0;
-  --color-brand-accent: #F7C400;
-  --color-brand-accent-hover: #D9A800;
-  --color-surface-hero: #002244;
-  --color-surface-page: #F4F7FA;
-  --color-whatsapp: #25D366;
+  --color-primary-yellow: var(--color-bgn-gold);
+  --color-primary-yellow-hover: color-mix(in oklch, var(--color-bgn-gold) 82%, black);
+  --color-primary-blue: var(--color-bgn-navy);
+  --color-primary-blue-dark: color-mix(in oklch, var(--color-bgn-navy) 82%, black);
+  --color-accent-blue: var(--color-bgn-sky);
+  --color-accent-blue-light: color-mix(in oklch, var(--color-bgn-sky) 70%, white);
+  --color-soft-bg: #fafafa;
+  --color-charcoal-dark: #172037;
+  --color-charcoal-light: #283753;
 
-  --color-amber-300: #FFE169;
-  --color-amber-400: #FED530;
-  --color-amber-500: #F7C400;
-  --color-amber-600: #D9A800;
+  --color-brand-primary: var(--color-bgn-navy);
+  --color-brand-primary-dark: color-mix(in oklch, var(--color-bgn-navy) 82%, black);
+  --color-brand-accent: var(--color-bgn-gold);
+  --color-brand-accent-hover: color-mix(in oklch, var(--color-bgn-gold) 82%, black);
+  --color-surface-hero: var(--color-bgn-navy);
+  --color-surface-page: #fafafa;
+  --color-whatsapp: color-mix(in oklch, var(--color-bgn-leaf) 72%, #128c4b);
 
-  --color-slate-50: #F4F7FA;
-  --color-slate-100: #E4EBF4;
-  --color-slate-800: #333333;
-  --color-slate-900: #1C355E;
-  --color-slate-950: #002244;
+  --color-amber-50: color-mix(in oklch, var(--color-bgn-gold) 16%, #fbfaf4);
+  --color-amber-100: color-mix(in oklch, var(--color-bgn-gold) 28%, #fbfaf4);
+  --color-amber-300: color-mix(in oklch, var(--color-bgn-gold) 72%, white);
+  --color-amber-400: color-mix(in oklch, var(--color-bgn-gold) 92%, white);
+  --color-amber-500: var(--color-bgn-gold);
+  --color-amber-600: color-mix(in oklch, var(--color-bgn-gold) 82%, black);
+  --color-amber-800: color-mix(in oklch, var(--color-bgn-gold) 52%, var(--color-bgn-navy));
+  --color-amber-900: color-mix(in oklch, var(--color-bgn-gold) 38%, var(--color-bgn-navy));
+  --color-amber-950: color-mix(in oklch, var(--color-bgn-gold) 24%, var(--color-bgn-navy));
+
+  --color-emerald-50: color-mix(in oklch, var(--color-bgn-leaf) 16%, #fbfaf4);
+  --color-emerald-100: color-mix(in oklch, var(--color-bgn-leaf) 30%, #fbfaf4);
+  --color-emerald-500: var(--color-bgn-leaf);
+  --color-emerald-600: color-mix(in oklch, var(--color-bgn-leaf) 70%, var(--color-bgn-navy));
+  --color-emerald-900: color-mix(in oklch, var(--color-bgn-leaf) 32%, var(--color-bgn-navy));
+
+  --color-teal-50: color-mix(in oklch, var(--color-bgn-sky) 22%, #fbfaf4);
+  --color-teal-100: color-mix(in oklch, var(--color-bgn-sky) 38%, #fbfaf4);
+  --color-teal-600: color-mix(in oklch, var(--color-bgn-sky) 62%, var(--color-bgn-navy));
+
+  --color-indigo-50: color-mix(in oklch, var(--color-bgn-navy) 8%, #fbfaf4);
+  --color-indigo-100: color-mix(in oklch, var(--color-bgn-sky) 36%, #fbfaf4);
+  --color-indigo-600: color-mix(in oklch, var(--color-bgn-navy) 92%, var(--color-bgn-sky));
+
+  --color-slate-50: #fafafa;
+  --color-slate-100: #f1f3f5;
+  --color-slate-200: #e5e7eb;
+  --color-slate-300: #d1d5db;
+  --color-slate-500: color-mix(in oklch, var(--color-bgn-navy) 58%, #9aa0a3);
+  --color-slate-600: color-mix(in oklch, var(--color-bgn-navy) 72%, #879097);
+  --color-slate-700: color-mix(in oklch, var(--color-bgn-navy) 84%, #6b7480);
+  --color-slate-800: color-mix(in oklch, var(--color-bgn-navy) 92%, #364257);
+  --color-slate-900: var(--color-bgn-navy);
+  --color-slate-950: color-mix(in oklch, var(--color-bgn-navy) 86%, black);
 
   --shadow-3xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
 

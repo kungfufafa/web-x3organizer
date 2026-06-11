@@ -5,6 +5,18 @@
 
 import { Layanan, Destinasi, PaketTrip, BlogArtikel } from './types';
 
+const destinationImages = {
+  bromo: "/images/destinations/bromo-sunrise-jeep.jpg",
+  bali: "/images/destinations/bali-coastal-temple.jpg",
+  nusaPenida: "/images/destinations/nusa-penida-kelingking.jpg",
+  malang: "/images/destinations/malang-heritage-riverside.jpg",
+  batu: "/images/destinations/batu-family-park.jpg"
+};
+
+const packageImages = {
+  corporateOuting: "/images/packages/corporate-outing-malang-batu.jpg"
+};
+
 // 1. Layanan (trip_categories)
 export const initialLayanan: Layanan[] = [
   {
@@ -60,7 +72,7 @@ export const initialDestinasi: Destinasi[] = [
     description: "Gunung Bromo menyuguhkan pemandangan magis matahari terbit (sunrise) berlatar belakang Gunung Batok dan Gunung Semeru. Petualangan berkendara Jeep 4x4 melintasi lautan pasir, menaiki kawah aktif, serta berfoto di Bukit Teletubbies dan Pasir Berbisik menjadikan destinasi ini ikon wisata dunia.",
     status: "active",
     sort_order: 1,
-    imageUrl: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&q=80&w=800"
+    imageUrl: destinationImages.bromo
   },
   {
     id: 12,
@@ -71,7 +83,7 @@ export const initialDestinasi: Destinasi[] = [
     description: "Pulau Dewata tidak pernah gagal memukau pengunjungnya dengan keragaman pantai pasir putih di selatan, hamparan terasering sawah hijau di Ubud, hingga keagungan pura bersejarah di tepi laut. Sentuhan seni, budaya, dan hospitality kelas dunia membuat liburan di Bali terasa begitu magis.",
     status: "active",
     sort_order: 2,
-    imageUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800"
+    imageUrl: destinationImages.bali
   },
   {
     id: 13,
@@ -82,7 +94,7 @@ export const initialDestinasi: Destinasi[] = [
     description: "Nusa Penida terkenal dengan formasi tebing karang raksasa yang menyerupai dinosaurus T-Rex di Kelingking Beach, kolam infinity alami Angel's Billabong, serta keindahan sunset di Broken Beach. Destinasi impian bagi para pecinta petualangan alam liar dan fotografi lanskap.",
     status: "active",
     sort_order: 3,
-    imageUrl: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80&w=800"
+    imageUrl: destinationImages.nusaPenida
   },
   {
     id: 14,
@@ -93,7 +105,7 @@ export const initialDestinasi: Destinasi[] = [
     description: "Malang menyuguhkan suasana perkotaan berhawa sejuk yang tenang, kuliner legendaris yang lezat, serta gugusan pantai selatan yang eksotis seperti Pantai Tiga Warna dan Pantai Sendang Biru. Akses transit utama di Jawa Timur dengan keramahtamahan warganya.",
     status: "active",
     sort_order: 4,
-    imageUrl: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=800"
+    imageUrl: destinationImages.malang
   },
   {
     id: 15,
@@ -104,7 +116,7 @@ export const initialDestinasi: Destinasi[] = [
     description: "Berada tepat bersebelahan dengan Malang, Kota Wisata Batu adalah pusat rekreasi modern di Jawa Timur. Mulai dari kebun binatang edukatif kelas dunia Jatim Park, Museum Angkut, petik apel organik di kebun raya, hingga paralayang ekstrem di Gunung Banyak.",
     status: "active",
     sort_order: 5,
-    imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800"
+    imageUrl: destinationImages.batu
   }
 ];
 
@@ -126,7 +138,7 @@ export const initialPaketTrip: PaketTrip[] = [
     is_featured: true,
     status: "published",
     published_at: "2026-05-01 08:00:00",
-    imageUrl: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.bromo,
     layanan_ids: [1], // Open Trip
     destinasi_ids: [11], // Bromo
     prices: [
@@ -277,7 +289,7 @@ export const initialPaketTrip: PaketTrip[] = [
     is_featured: true,
     status: "published",
     published_at: "2026-05-15 10:00:00",
-    imageUrl: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.nusaPenida,
     layanan_ids: [2, 4], // Private Trip, Family Trip
     destinasi_ids: [12, 13], // Bali, Nusa Penida
     prices: [
@@ -428,7 +440,7 @@ export const initialPaketTrip: PaketTrip[] = [
     is_featured: true,
     status: "published",
     published_at: "2026-05-20 11:30:00",
-    imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800",
+    imageUrl: packageImages.corporateOuting,
     layanan_ids: [3], // Corporate Outing
     destinasi_ids: [14, 15], // Malang, Batu
     prices: [
@@ -579,7 +591,7 @@ export const initialPaketTrip: PaketTrip[] = [
     is_featured: false,
     status: "published",
     published_at: "2026-05-22 14:00:00",
-    imageUrl: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.batu,
     layanan_ids: [4, 2], // Family Trip, Private Trip
     destinasi_ids: [14, 15], // Malang, Batu
     prices: [
@@ -730,7 +742,7 @@ export const initialPaketTrip: PaketTrip[] = [
     is_featured: false,
     status: "published",
     published_at: "2026-05-25 09:00:00",
-    imageUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.nusaPenida,
     layanan_ids: [1], // Open Trip
     destinasi_ids: [12, 13], // Bali, Nusa Penida
     prices: [
@@ -880,7 +892,7 @@ export const initialBlogArtikel: BlogArtikel[] = [
 
 <p>Hubungi admin kami lewat tombol konsultasi WhatsApp Resmi di panel samping untuk konsultasi gratis penyesuaian jadwal keberangkatan.</p>`,
     is_featured: true,
-    imageUrl: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.bromo,
     status: "published",
     sort_order: 1,
     published_at: "2026-05-18",
@@ -918,7 +930,7 @@ export const initialBlogArtikel: BlogArtikel[] = [
 
 <p>Tunggu apa lagi? Rencanakan petualangan tropis eksklusif keluarga bersama agen kami hari ini juga.</p>`,
     is_featured: false,
-    imageUrl: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80&w=800",
+    imageUrl: destinationImages.nusaPenida,
     status: "published",
     sort_order: 2,
     published_at: "2026-05-24",
@@ -950,7 +962,7 @@ export const initialBlogArtikel: BlogArtikel[] = [
 
 <p>Kami bersedia menyusun draft proposal outline PDF penawaran, daftar menu makan bersertifikat halal, skema rundown acara khusus instansi Anda secara kustom. Hubungi admin kami untuk informasi kelengkapannya.</p>`,
     is_featured: false,
-    imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800",
+    imageUrl: packageImages.corporateOuting,
     status: "published",
     sort_order: 3,
     published_at: "2026-05-28",

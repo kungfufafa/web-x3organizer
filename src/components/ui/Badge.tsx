@@ -9,9 +9,9 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-slate-50 border-slate-100 text-slate-600',
-  accent: 'bg-amber-500/90 text-amber-950',
-  dark: 'bg-slate-900/80 text-white',
+  default: 'bg-slate-50 border-slate-100 text-slate-700',
+  accent: 'bg-amber-500/90 text-slate-950',
+  dark: 'bg-slate-950/90 text-white',
   outline: 'bg-white/90 backdrop-blur-md text-slate-900 border-white/20',
 };
 
@@ -23,7 +23,7 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg tracking-wide border',
+        'inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wide border',
         variantClasses[variant],
         className,
       ].join(' ')}
@@ -37,7 +37,7 @@ export const Eyebrow: React.FC<{ children: React.ReactNode; className?: string }
   children,
   className = '',
 }) => (
-  <p className={`text-[10px] font-semibold uppercase tracking-widest text-amber-600 ${className}`}>
+  <p className={`text-[10px] font-bold uppercase tracking-widest text-amber-600 ${className}`}>
     {children}
   </p>
 );

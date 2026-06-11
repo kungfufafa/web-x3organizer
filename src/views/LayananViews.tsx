@@ -199,7 +199,7 @@ export const LayananDetailView: React.FC<LayananDetailProps> = ({ slug, onNaviga
 
  {associatedDests.length > 0 && (
  <Section className="pt-0 pb-32">
- <Card className="p-5 md:p-6 bg-slate-50" hoverable={false}>
+ <div className="space-y-6 mt-12">
  <div className="mb-8">
  <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight font-display mb-3">
  Cakupan Destinasi
@@ -226,7 +226,7 @@ export const LayananDetailView: React.FC<LayananDetailProps> = ({ slug, onNaviga
  </div>
  ))}
  </div>
- </Card>
+ </div>
  </Section>
  )}
 

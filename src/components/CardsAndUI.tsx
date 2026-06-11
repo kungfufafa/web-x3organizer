@@ -60,12 +60,12 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  }
  : {};
 
- const cardClasses = "group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col h-full cursor-pointer relative";
+ const cardClasses = "group bg-white rounded-2xl border border-slate-100 shadow-md hover:shadow-xl hover:-translate-y-1 hover:border-slate-200 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden";
 
  const cardContent = (
  <>
  {/* Visual Header Banner */}
- <div className="relative aspect-[4/3] w-full rounded-t-xl">
+ <div className="relative aspect-[4/3] w-full">
  <div className="w-full h-full absolute inset-0">
  <img 
  src={packageItem.imageUrl} 
@@ -77,16 +77,16 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
  {/* Absolute floating items */}
  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
- <span className="bg-white/90 backdrop-blur-md text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
+ <span className="bg-white/92 backdrop-blur-md text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm border border-white/50">
  {packageItem.type}
  </span>
  </div>
  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-white">
- <div className="bg-slate-900/80 backdrop-blur-md text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 tracking-wider">
+ <div className="bg-slate-950/86 backdrop-blur-md text-[10px] font-bold py-1.5 px-3 rounded-full flex items-center gap-1.5 tracking-wider">
  <Clock className="w-3.5 h-3.5 text-amber-600" />
  <span>{packageItem.duration_label}</span>
  </div>
- <div className="bg-amber-500/90 backdrop-blur-md text-amber-950 text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 tracking-wider">
+ <div className="bg-amber-500/95 backdrop-blur-md text-slate-950 text-[10px] font-bold py-1.5 px-3 rounded-full flex items-center gap-1.5 tracking-wider">
  <Star className="w-3.5 h-3.5" />
  <span>{packageItem.rating.toFixed(1)}</span>
  </div>
@@ -100,7 +100,7 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  {/* Destination badges */}
  <div className="flex flex-wrap gap-1.5 mb-4">
  {matchedDests.map(d => (
- <span key={d.id} className="text-slate-500 text-[9px] font-semibold flex items-center bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+ <span key={d.id} className="text-slate-600 text-[9px] font-semibold flex items-center bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-full">
  <MapPin className="w-3 h-3 mr-1 text-amber-600" />
  {d.name}
  </span>
@@ -140,7 +140,7 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  e.stopPropagation();
  onSelect(packageItem.slug);
  }}
- className="bg-primary-blue hover:bg-primary-blue-dark text-white text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 group/btn touch-target min-h-[44px]"
+ className="bg-primary-blue hover:bg-primary-blue-dark text-white text-xs font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all duration-200 group/btn touch-target min-h-[44px]"
  aria-label={`Detail paket ${packageItem.name}`}
  >
  Detail
@@ -149,7 +149,7 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  <button 
  id={`card-whatsapp-btn-${packageItem.id}`}
  onClick={(e) => onTanyaAdmin(packageItem, e)}
- className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-emerald-900 hover:text-emerald-600 text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-colors duration-200 touch-target min-h-[44px]"
+ className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-emerald-900 hover:text-emerald-600 text-xs font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-1.5 transition-colors duration-200 touch-target min-h-[44px]"
  aria-label={`Tanya admin tentang ${packageItem.name}`}
  >
  <Phone className="w-3.5 h-3.5" aria-hidden="true" />
@@ -198,7 +198,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({ destination, t
  type="button"
  id={`destination-card-${destination.id}`}
  onClick={onSelect}
- className="group relative h-64 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 block cursor-pointer w-full text-left overflow-hidden"
+ className="group relative h-64 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 block cursor-pointer w-full text-left overflow-hidden"
  aria-label={`Jelajahi paket trip ke ${destination.name}, ${destination.region}. ${tripCount} paket tersedia.`}
  >
  <img 
@@ -220,10 +220,10 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({ destination, t
  {destination.summary}
  </p>
  <div className="mt-auto flex items-center justify-between">
- <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold py-1.5 px-3 rounded-xl border border-white/20 tracking-wider">
+ <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold py-1.5 px-3 rounded-full border border-white/20 tracking-wider">
  {tripCount} Paket
  </span>
- <span className="text-amber-600 bg-white/10 backdrop-blur-md p-2 rounded-lg group-hover:translate-x-1 duration-200 transition-transform">
+ <span className="text-amber-500 bg-white/10 backdrop-blur-md p-2 rounded-full group-hover:translate-x-1 duration-200 transition-transform">
  <ArrowRight className="w-4 h-4" aria-hidden="true" />
  </span>
  </div>
@@ -244,11 +244,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ layanan, tripCount, on
  <div 
  id={`service-card-${layanan.id}`}
  onClick={onSelect}
- className="bg-white border border-slate-200 p-6 sm:p-6 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-400 flex flex-col justify-between h-full group cursor-pointer"
+ className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/50 p-6 sm:p-6 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-amber-300 transition-all duration-400 flex flex-col justify-between h-full group cursor-pointer"
  >
  <div>
  <div className="flex items-center gap-4 mb-4">
-      <div className="w-12 h-12 shrink-0 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-primary-blue group-hover:text-amber-500 transition-all duration-300 shadow-sm">
+      <div className="w-12 h-12 shrink-0 rounded-lg bg-white/70 border border-amber-300/40 flex items-center justify-center text-slate-900 group-hover:bg-primary-blue group-hover:text-amber-500 transition-all duration-300 shadow-sm">
         <ServiceIcon name={layanan.iconName} className="w-5 h-5" />
       </div>
       <h3 className="font-display font-bold text-slate-900 text-lg md:text-xl group-hover:text-primary-blue transition-colors">
@@ -262,7 +262,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ layanan, tripCount, on
  </div>
 
  <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
- <span className="text-slate-500 text-[10px] font-bold tracking-wide bg-slate-50 px-2.5 py-1 rounded-lg">
+ <span className="text-slate-700 text-[10px] font-bold tracking-wide bg-white/70 px-2.5 py-1 rounded-full border border-amber-300/40">
  {tripCount} Paket
  </span>
  <span className="text-slate-900 font-bold tracking-wider text-[10px] flex items-center gap-1.5 group-hover:text-primary-blue transition-colors ">
@@ -277,13 +277,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ layanan, tripCount, on
 // 7. Pricing Card
 export const PricingCard: React.FC<{ tier: HargaPaket }> = ({ tier }) => {
  return (
- <div className={`p-6 sm:p-6 rounded-xl border transition-all duration-300 relative  ${
+ <div className={`p-6 sm:p-6 rounded-lg border transition-all duration-300 relative  ${
  tier.is_primary 
- ? 'bg-white border-2 border-amber-500 shadow-md shadow-amber-500/10' 
- : 'bg-white text-slate-500 border-slate-200 shadow-sm hover:border-slate-300'
+ ? 'bg-amber-100/65 border-2 border-amber-500 shadow-md shadow-amber-500/10' 
+ : 'bg-white text-slate-500 border-slate-100 shadow-sm hover:border-slate-200'
  }`}>
  {tier.is_primary && (
- <div className="absolute top-0 right-0 bg-amber-500 text-amber-950 text-[9px] font-bold px-4 py-1.5 rounded-bl-xl tracking-wide ">
+ <div className="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] font-bold px-4 py-1.5 rounded-bl-lg tracking-wide ">
  REKOMENDASI
  </div>
  )}
@@ -302,11 +302,11 @@ export const PricingCard: React.FC<{ tier: HargaPaket }> = ({ tier }) => {
  <div className="mt-6 flex flex-col gap-2 text-[11px] text-slate-500 border-t border-slate-100 pt-6">
  <div className="flex justify-between items-center">
  <span className="font-medium text-slate-500">Min. Peserta</span>
- <strong className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg">{tier.min_pax} pax</strong>
+ <strong className="text-slate-900 bg-slate-50 px-3 py-1 rounded-full">{tier.min_pax} pax</strong>
  </div>
  <div className="flex justify-between items-center">
  <span className="font-medium text-slate-500">Max. Peserta</span>
- <strong className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg">{tier.max_pax} pax</strong>
+ <strong className="text-slate-900 bg-slate-50 px-3 py-1 rounded-full">{tier.max_pax} pax</strong>
  </div>
  </div>
  </div>

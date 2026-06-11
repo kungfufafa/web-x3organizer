@@ -26,7 +26,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input: React.FC<InputProps> = ({ dark = false, className = '', ...props }) => {
   const darkClasses = dark
-    ? 'bg-slate-900/80 border-slate-700/50 text-white placeholder-slate-500'
+    ? 'bg-white/10 border-white/20 text-white placeholder-slate-300 focus:bg-white/20 focus:border-white/40 focus:ring-amber-500/50'
     : '';
   return <input className={`${inputBase} ${darkClasses} ${className}`} {...props} />;
 };
