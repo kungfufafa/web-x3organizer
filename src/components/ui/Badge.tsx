@@ -23,7 +23,7 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wide border',
+        'inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full tracking-wide border',
         variantClasses[variant],
         className,
       ].join(' ')}
@@ -37,7 +37,7 @@ export const Eyebrow: React.FC<{ children: React.ReactNode; className?: string }
   children,
   className = '',
 }) => (
-  <p className={`text-[10px] font-bold uppercase tracking-widest text-amber-600 ${className}`}>
+  <p className={`text-xs font-bold uppercase tracking-widest text-amber-700 ${className}`}>
     {children}
   </p>
 );

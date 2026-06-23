@@ -4,7 +4,9 @@
  */
 
 import { useEffect } from 'react';
-import { resolvePageSeo, getOrganizationSchema } from '../lib/seo';
+import { toAbsoluteUrl } from '../data/media';
+import { resolvePageSeo, getCanonicalUrl, getOrganizationSchema, getWebSiteSchema, getFaqPageSchema } from '../lib/seo';
+import { HOME_FAQ_ITEMS } from '../data/faq';
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string) {
   let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
@@ -40,11 +42,11 @@ function upsertJsonLd(id: string, data: object) {
 export function usePageSeo(path: string) {
   useEffect(() => {
     const seo = resolvePageSeo(path);
-    const canonical = `${window.location.origin}${seo.path}`;
+    const canonical = getCanonicalUrl(path);
 
     document.title = seo.title;
     upsertMeta('name', 'description', seo.description);
-    upsertMeta('name', 'robots', 'index, follow');
+    upsertMeta('name', 'robots', seo.robots ?? 'index, follow');
     upsertLink('canonical', canonical);
 
     upsertMeta('property', 'og:title', seo.title);
@@ -54,8 +56,14 @@ export function usePageSeo(path: string) {
     upsertMeta('property', 'og:site_name', 'X3 Organizer');
     upsertMeta('property', 'og:locale', 'id_ID');
     if (seo.image) {
-      const imageUrl = seo.image.startsWith('http') ? seo.image : `${window.location.origin}${seo.image}`;
+      const imageUrl = toAbsoluteUrl(seo.image);
       upsertMeta('property', 'og:image', imageUrl);
+      upsertMeta('property', 'og:image:width', String(seo.imageWidth ?? 1200));
+      upsertMeta('property', 'og:image:height', String(seo.imageHeight ?? 630));
+      upsertMeta('property', 'og:image:type', seo.imageType ?? 'image/jpeg');
+      upsertMeta('property', 'og:image:alt', seo.imageAlt ?? seo.title);
+      upsertMeta('name', 'twitter:image', imageUrl);
+      upsertMeta('name', 'twitter:image:alt', seo.imageAlt ?? seo.title);
     }
 
     upsertMeta('name', 'twitter:card', 'summary_large_image');
@@ -64,8 +72,12 @@ export function usePageSeo(path: string) {
 
     if (path === '/') {
       upsertJsonLd('jsonld-organization', getOrganizationSchema());
+      upsertJsonLd('jsonld-website', getWebSiteSchema());
+      upsertJsonLd('jsonld-faq', getFaqPageSchema(HOME_FAQ_ITEMS));
     } else {
       document.getElementById('jsonld-organization')?.remove();
+      document.getElementById('jsonld-website')?.remove();
+      document.getElementById('jsonld-faq')?.remove();
     }
   }, [path]);
 }

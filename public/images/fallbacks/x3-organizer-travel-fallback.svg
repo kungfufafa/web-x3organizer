@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="Ilustrasi fallback perjalanan X3 Organizer">
+  <rect width="960" height="720" fill="#fafafa"/>
+  <path d="M0 545c152-62 244-76 383-45 148 33 267 19 577-104v324H0z" fill="#071e49" opacity=".12"/>
+  <path d="M0 604c156-45 282-44 409 4 132 50 297 46 551-42v154H0z" fill="#128c4b" opacity=".14"/>
+  <circle cx="760" cy="166" r="70" fill="#d1b06c" opacity=".28"/>
+  <path d="M193 420c82-106 143-159 183-159s78 49 114 146c49-70 91-105 126-105 40 0 91 58 153 174" fill="none" stroke="#071e49" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" opacity=".82"/>
+  <path d="M245 498c126-84 281-121 467-110" fill="none" stroke="#128c4b" stroke-width="16" stroke-linecap="round" stroke-dasharray="4 34"/>
+  <text x="480" y="612" text-anchor="middle" font-family="Instrument Sans, Arial, sans-serif" font-size="34" font-weight="800" fill="#071e49">X3 Organizer</text>
+</svg>

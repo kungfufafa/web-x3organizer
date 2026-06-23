@@ -26,6 +26,7 @@ import {
  ThumbsUp
 } from 'lucide-react';
 import { PaketTrip, Destinasi, Layanan, HargaPaket, ItineraryPaket, FasilitasPaket } from '../types';
+import { getMediaAlt, responsiveImageProps } from '../data/media';
 
 // Dynamic Icon Renderer
 export const ServiceIcon = ({ name, className = "w-6 h-6" }: { name: string; className?: string }) => {
@@ -60,128 +61,86 @@ export const TripCard: React.FC<TripCardProps> = ({ packageItem, destinationsLis
  }
  : {};
 
- const cardClasses = "group bg-white rounded-2xl border border-slate-100 shadow-md hover:shadow-xl hover:-translate-y-1 hover:border-slate-200 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden";
+ const cardClasses = "group bg-white rounded-2xl border border-slate-100 shadow-card hover:shadow-card-hover hover:-translate-y-1 hover:border-slate-200 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden";
 
  const cardContent = (
  <>
- {/* Visual Header Banner */}
- <div className="relative aspect-[4/3] w-full">
- <div className="w-full h-full absolute inset-0">
- <img 
- src={packageItem.imageUrl} 
- alt={`${packageItem.name} — paket ${packageItem.type}, ${packageItem.duration_label}`}
+ <div className="relative aspect-[4/3] w-full overflow-hidden">
+ <img
+ {...responsiveImageProps(packageItem.imageUrl)}
+ alt={getMediaAlt(packageItem.imageUrl, `${packageItem.name} — paket ${packageItem.type}, ${packageItem.duration_label}`)}
  loading="lazy"
- className="w-full h-full object-cover transition-transform duration-700 ease-out"
+ decoding="async"
+ className="absolute inset-0 h-full w-full object-cover img-cover-hover"
  referrerPolicy="no-referrer"
  />
- <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
- {/* Absolute floating items */}
- <div className="absolute top-4 left-4 flex flex-wrap gap-2">
- <span className="bg-white/92 backdrop-blur-md text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm border border-white/50">
+ <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent" />
+ <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
  {packageItem.type}
  </span>
  </div>
- <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-white">
- <div className="bg-slate-950/86 backdrop-blur-md text-[10px] font-bold py-1.5 px-3 rounded-full flex items-center gap-1.5 tracking-wider">
- <Clock className="w-3.5 h-3.5 text-amber-600" />
- <span>{packageItem.duration_label}</span>
- </div>
- <div className="bg-amber-500/95 backdrop-blur-md text-slate-950 text-[10px] font-bold py-1.5 px-3 rounded-full flex items-center gap-1.5 tracking-wider">
- <Star className="w-3.5 h-3.5" />
- <span>{packageItem.rating.toFixed(1)}</span>
- </div>
- </div>
- </div>
- </div>
 
- {/* Card Content body */}
- <div className="p-6 flex-1 flex flex-col justify-between">
- <div className="mb-6">
- {/* Destination badges */}
- <div className="flex flex-wrap gap-1.5 mb-4">
- {matchedDests.map(d => (
- <span key={d.id} className="text-slate-600 text-[9px] font-semibold flex items-center bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-full">
- <MapPin className="w-3 h-3 mr-1 text-amber-600" />
- {d.name}
- </span>
- ))}
- </div>
-
- <h3 className="font-display font-bold text-slate-900 text-lg leading-snug group-hover:text-primary-blue transition-colors duration-300 mb-2">
+ <div className="flex flex-1 flex-col p-6 md:p-7">
+ <div className="flex-1">
+ <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-600">
+ <Clock className="h-4 w-4 text-amber-600" aria-hidden="true" />
+ {packageItem.duration_label}
+ </p>
+ <h3 className="font-display text-2xl font-bold leading-tight text-slate-900 group-hover:text-brand-primary transition-colors">
  {packageItem.name}
  </h3>
-
- <p className="text-slate-500 text-sm font-sans line-clamp-2 leading-relaxed">
- {packageItem.summary}
+ <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-slate-600">
+ {matchedDests.length > 0 ? matchedDests.map(d => d.name).join(' + ') : packageItem.summary}
  </p>
  </div>
 
+ <div className="mt-7 flex items-end justify-between gap-5 border-t border-slate-100 pt-6">
  <div>
- {/* Price & Rating divider */}
- <div className="border-t border-slate-100 pt-4 flex items-center justify-between pb-4">
- <div>
- <p className="text-[10px] font-semibold text-slate-500">Mulai Dari</p>
- <p className="text-lg font-bold text-slate-900 font-display">
- {packageItem.price_label}
- </p>
+ <p className="text-sm font-semibold text-slate-500">Mulai dari</p>
+ <p className="font-display text-2xl font-bold text-slate-900">{packageItem.price_label}</p>
  </div>
- 
- <div className="text-right">
- <p className="text-[10px] text-slate-500 tracking-wider">Ulasan</p>
- <p className="text-slate-900 text-sm font-bold">{packageItem.review_label}</p>
- </div>
- </div>
-
- {/* Dual Action CTAs */}
- <div className="grid grid-cols-2 gap-3 mt-2">
- <button 
- id={`card-detail-btn-${packageItem.id}`}
- onClick={(e) => {
- e.stopPropagation();
- onSelect(packageItem.slug);
- }}
- className="bg-primary-blue hover:bg-primary-blue-dark text-white text-xs font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all duration-200 group/btn touch-target min-h-[44px]"
- aria-label={`Detail paket ${packageItem.name}`}
+ {/* Visual CTA only — the whole card is the link (no nested interactive). */}
+ <span
+ aria-hidden="true"
+ className="inline-flex items-center justify-center gap-2 font-bold rounded-full transition-colors duration-[250ms] bg-brand-primary text-white shadow-sm text-xs py-2.5 px-5 tracking-wide min-h-[44px]"
  >
- Detail
- <ArrowRight className="w-3.5 h-3.5 transform group-hover/btn:translate-x-1 transition-transform" />
- </button>
- <button 
- id={`card-whatsapp-btn-${packageItem.id}`}
- onClick={(e) => onTanyaAdmin(packageItem, e)}
- className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-emerald-900 hover:text-emerald-600 text-xs font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-1.5 transition-colors duration-200 touch-target min-h-[44px]"
- aria-label={`Tanya admin tentang ${packageItem.name}`}
- >
- <Phone className="w-3.5 h-3.5" aria-hidden="true" />
- Tanya
- </button>
- </div>
+ Lihat
+ <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+ </span>
  </div>
  </div>
  </>
  );
 
+ const handleCardClick = (e: React.MouseEvent) => {
+ if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+ e.preventDefault();
+ onSelect(packageItem.slug);
+ };
+
  if (animateIndex !== undefined) {
  return (
- <motion.div
+ <motion.a
  id={`trip-card-${packageItem.id}`}
- onClick={() => onSelect(packageItem.slug)}
+ href={`/produk/${packageItem.slug}`}
+ onClick={handleCardClick}
  className={cardClasses}
  {...motionProps}
  >
  {cardContent}
- </motion.div>
+ </motion.a>
  );
  }
 
  return (
- <div
+ <a
  id={`trip-card-${packageItem.id}`}
- onClick={() => onSelect(packageItem.slug)}
+ href={`/produk/${packageItem.slug}`}
+ onClick={handleCardClick}
  className={cardClasses}
  >
  {cardContent}
- </div>
+ </a>
  );
 };
 
@@ -199,18 +158,18 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({ destination, t
  id={`destination-card-${destination.id}`}
  onClick={onSelect}
  className="group relative h-64 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 block cursor-pointer w-full text-left overflow-hidden"
- aria-label={`Jelajahi paket trip ke ${destination.name}, ${destination.region}. ${tripCount} paket tersedia.`}
  >
  <img 
- src={destination.imageUrl} 
+ {...responsiveImageProps(destination.imageUrl)}
  alt=""
  loading="lazy"
+ decoding="async"
  aria-hidden="true"
  className="w-full h-full object-cover transition-transform duration-700 ease-out"
  referrerPolicy="no-referrer"
  />
  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent p-6 flex flex-col justify-end text-white">
- <span className="text-[10px] font-semibold text-amber-600 mb-2 block">
+ <span className="text-amber-600 text-xs font-semibold mb-2 block">
  {destination.region}
  </span>
  <h3 className="font-display font-bold text-2xl leading-tight mb-2">
@@ -220,7 +179,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({ destination, t
  {destination.summary}
  </p>
  <div className="mt-auto flex items-center justify-between">
- <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold py-1.5 px-3 rounded-full border border-white/20 tracking-wider">
+ <span className="bg-white/10 backdrop-blur-md text-white text-xs font-bold py-1.5 px-3 rounded-full border border-white/20 tracking-wider">
  {tripCount} Paket
  </span>
  <span className="text-amber-500 bg-white/10 backdrop-blur-md p-2 rounded-full group-hover:translate-x-1 duration-200 transition-transform">
@@ -248,10 +207,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ layanan, tripCount, on
  >
  <div>
  <div className="flex items-center gap-4 mb-4">
-      <div className="w-12 h-12 shrink-0 rounded-lg bg-white/70 border border-amber-300/40 flex items-center justify-center text-slate-900 group-hover:bg-primary-blue group-hover:text-amber-500 transition-all duration-300 shadow-sm">
+      <div className="w-12 h-12 shrink-0 rounded-lg bg-white/70 border border-amber-300/40 flex items-center justify-center text-slate-900 group-hover:bg-brand-primary group-hover:text-amber-500 transition-all duration-300 shadow-sm">
         <ServiceIcon name={layanan.iconName} className="w-5 h-5" />
       </div>
-      <h3 className="font-display font-bold text-slate-900 text-lg md:text-xl group-hover:text-primary-blue transition-colors">
+      <h3 className="font-display font-bold text-slate-900 text-lg md:text-xl group-hover:text-brand-primary transition-colors">
         {layanan.name}
       </h3>
     </div>
@@ -262,10 +221,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ layanan, tripCount, on
  </div>
 
  <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
- <span className="text-slate-700 text-[10px] font-bold tracking-wide bg-white/70 px-2.5 py-1 rounded-full border border-amber-300/40">
+ <span className="text-slate-700 text-xs font-bold tracking-wide bg-white/70 px-2.5 py-1 rounded-full border border-amber-300/40">
  {tripCount} Paket
  </span>
- <span className="text-slate-900 font-bold tracking-wider text-[10px] flex items-center gap-1.5 group-hover:text-primary-blue transition-colors ">
+ <span className="text-slate-900 font-bold tracking-wider text-xs flex items-center gap-1.5 group-hover:text-brand-primary transition-colors ">
  Eksplor
  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
  </span>
@@ -325,7 +284,7 @@ export const ItineraryTimeline: React.FC<{ itineraries: ItineraryPaket[] }> = ({
  {sorted.map((item, index) => (
  <div key={index} className="relative group/timeline">
  {/* Bullet point indicator */}
- <div className="absolute -left-[33px] top-1 bg-primary-blue text-white border-4 border-white w-6.5 h-6.5 flex items-center justify-center rounded-full text-[9px] font-bold shadow-xs transition-colors duration-200">
+ <div className="absolute -left-[33px] top-1 bg-brand-primary text-white border-4 border-white w-6.5 h-6.5 flex items-center justify-center rounded-full text-[9px] font-bold shadow-xs transition-colors duration-200">
  {item.day_number}
  </div>
 

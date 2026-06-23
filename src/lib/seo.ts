@@ -4,6 +4,15 @@
  */
 
 import { initialPaketTrip, initialBlogArtikel, initialLayanan } from '../data';
+import {
+  BRAND_ASSETS,
+  DEFAULT_SOCIAL_IMAGE,
+  SOCIAL_IMAGE_SIZE,
+  getSiteUrl,
+  socialImageForPath,
+  toAbsoluteUrl,
+} from '../data/media';
+import { isNotFoundRoute } from './routes';
 
 export interface PageSeo {
   title: string;
@@ -11,10 +20,29 @@ export interface PageSeo {
   path: string;
   type?: 'website' | 'article';
   image?: string;
+  imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageType?: string;
+  structuredDataImage?: string;
+  robots?: string;
 }
 
 const SITE_NAME = 'X3 Organizer';
-const ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
+const ORIGIN = getSiteUrl();
+
+function withSocialImage(seo: PageSeo): PageSeo {
+  const image = seo.image ?? socialImageForPath(seo.path);
+  return {
+    ...seo,
+    image,
+    imageAlt: seo.imageAlt ?? `${SITE_NAME} — ${seo.title.replace(` — ${SITE_NAME}`, '')}`,
+    imageWidth: SOCIAL_IMAGE_SIZE.width,
+    imageHeight: SOCIAL_IMAGE_SIZE.height,
+    imageType: SOCIAL_IMAGE_SIZE.type,
+    structuredDataImage: seo.structuredDataImage ?? image,
+  };
+}
 
 export const DEFAULT_SEO: PageSeo = {
   title: `${SITE_NAME} — Open Trip, Private Trip & Corporate Outing`,
@@ -22,33 +50,34 @@ export const DEFAULT_SEO: PageSeo = {
     'Layanan spesialis perjalanan domestik dan internasional. Paket open trip Bromo, private trip Bali & Nusa Penida, corporate outing Malang-Batu. Booking via WhatsApp 24/7.',
   path: '/',
   type: 'website',
-  image: '/logo.png',
+  image: DEFAULT_SOCIAL_IMAGE,
+  imageAlt: 'X3 Organizer — layanan open trip, private trip, corporate outing, dan family trip',
 };
 
 export function resolvePageSeo(path: string): PageSeo {
   const [pathname, query = ''] = path.split('?');
   const canonicalPath = pathname + (query ? `?${query}` : '');
 
-  if (pathname === '/') return { ...DEFAULT_SEO, path: '/' };
+  if (pathname === '/') return withSocialImage({ ...DEFAULT_SEO, path: '/', image: socialImageForPath('/') });
 
   if (pathname === '/layanan') {
-    return {
+    return withSocialImage({
       title: `Layanan Perjalanan — ${SITE_NAME}`,
       description:
         'Open trip, private trip, corporate outing, dan family trip. Pilih format perjalanan sesuai kebutuhan rombongan dan budget Anda.',
       path: '/layanan',
-    };
+    });
   }
 
   if (pathname.startsWith('/layanan/')) {
     const slug = pathname.replace('/layanan/', '');
     const layanan = initialLayanan.find((l) => l.slug === slug);
     if (layanan) {
-      return {
+      return withSocialImage({
         title: `${layanan.name} — Layanan ${SITE_NAME}`,
         description: layanan.description.slice(0, 155),
         path: canonicalPath,
-      };
+      });
     }
   }
 
@@ -57,44 +86,44 @@ export function resolvePageSeo(path: string): PageSeo {
       const slug = pathname.replace('/produk/', '');
       const paket = initialPaketTrip.find((p) => p.slug === slug);
       if (paket) {
-        return {
+        return withSocialImage({
           title: `${paket.name} — Paket Trip ${SITE_NAME}`,
           description: `${paket.summary} Mulai ${paket.price_label}. ${paket.duration_label}.`,
           path: canonicalPath,
-          image: paket.imageUrl,
-        };
+          structuredDataImage: paket.imageUrl,
+        });
       }
     }
     const dest = query ? new URLSearchParams(query).get('dest') : null;
     const destLabel = dest ? ` di ${dest.replace(/-/g, ' ')}` : '';
-    return {
+    return withSocialImage({
       title: `Katalog Paket Trip${destLabel} — ${SITE_NAME}`,
       description:
         'Temukan paket open trip, private trip, corporate outing, dan family trip. Filter berdasarkan destinasi, durasi, dan harga.',
       path: canonicalPath,
-    };
+    });
   }
 
   if (pathname === '/blog') {
-    return {
+    return withSocialImage({
       title: `Blog & Panduan Wisata — ${SITE_NAME}`,
       description:
         'Tips perjalanan, panduan destinasi, dan rekomendasi wisata Bromo, Bali, Nusa Penida, dan Malang dari tim X3 Organizer.',
       path: '/blog',
-    };
+    });
   }
 
   if (pathname.startsWith('/blog/')) {
     const slug = pathname.replace('/blog/', '');
     const article = initialBlogArtikel.find((a) => a.slug === slug);
     if (article) {
-      return {
+      return withSocialImage({
         title: `${article.title} — ${SITE_NAME}`,
         description: article.excerpt.slice(0, 155),
         path: canonicalPath,
         type: 'article',
-        image: article.imageUrl,
-      };
+        structuredDataImage: article.imageUrl,
+      });
     }
   }
 
@@ -102,7 +131,7 @@ export function resolvePageSeo(path: string): PageSeo {
     '/tentang-kami': {
       title: `Tentang Kami — ${SITE_NAME}`,
       description:
-        'PT. X3 Organizer Nusantara — penyedia layanan perjalanan terpercaya dengan armada terstandar, pemandu lokal, dan admin 24/7.',
+        'PT. Xthree Navigasi Internasional — penyedia layanan perjalanan terpercaya dengan armada terstandar, pemandu lokal, dan admin 24/7.',
     },
     '/karir': {
       title: `Karir & Lowongan — ${SITE_NAME}`,
@@ -120,10 +149,19 @@ export function resolvePageSeo(path: string): PageSeo {
 
   const staticPage = staticPages[pathname];
   if (staticPage) {
-    return { ...staticPage, path: pathname };
+    return withSocialImage({ ...staticPage, path: pathname });
   }
 
-  return { ...DEFAULT_SEO, path: canonicalPath };
+  if (isNotFoundRoute(path)) {
+    return withSocialImage({
+      title: `Halaman Tidak Ditemukan — ${SITE_NAME}`,
+      description: 'Halaman yang Anda cari tidak tersedia. Kembali ke beranda untuk melihat paket open trip, private trip, dan corporate outing.',
+      path: pathname,
+      robots: 'noindex, follow',
+    });
+  }
+
+  return withSocialImage({ ...DEFAULT_SEO, path: canonicalPath });
 }
 
 export function getCanonicalUrl(path: string): string {
@@ -137,7 +175,8 @@ export function getOrganizationSchema() {
     '@type': 'TravelAgency',
     name: SITE_NAME,
     url: ORIGIN,
-    logo: `${ORIGIN}/logo.png`,
+    logo: toAbsoluteUrl(BRAND_ASSETS.organizationLogo, ORIGIN),
+    image: toAbsoluteUrl(DEFAULT_SOCIAL_IMAGE, ORIGIN),
     description: DEFAULT_SEO.description,
     telephone: '+62-812-3456-789',
     email: 'cs@x3organizer.com',
@@ -146,5 +185,31 @@ export function getOrganizationSchema() {
       'https://www.tiktok.com/@x3organizer',
     ],
     areaServed: ['Indonesia'],
+  };
+}
+
+export function getWebSiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: ORIGIN,
+    description: DEFAULT_SEO.description,
+    inLanguage: 'id-ID',
+  };
+}
+
+export function getFaqPageSchema(items: { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
   };
 }

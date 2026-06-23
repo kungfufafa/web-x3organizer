@@ -1,6 +1,14 @@
 export { Button } from './Button';
 export { PageHero } from './PageHero';
 export { Section } from './Section';
+export { Container } from './Container';
+export { SectionHeader } from './SectionHeader';
+export { SplitSection } from './SplitSection';
+export { Breadcrumbs } from './Breadcrumbs';
+export { ResponsiveImage } from './ResponsiveImage';
+export { FinalCTA } from './FinalCTA';
 export { Card } from './Card';
 export { FormField, Input, Select } from './FormField';
 export { Badge, Eyebrow } from './Badge';
+export { Accordion } from './Accordion';
+export type { AccordionItem } from './Accordion';

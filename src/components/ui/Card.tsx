@@ -5,6 +5,8 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  /** When provided, the card renders as an `<a>` (navigation) instead of a `<div>`. */
+  href?: string;
   hoverable?: boolean;
   id?: string;
   animateIndex?: number;
@@ -14,6 +16,7 @@ export const Card: React.FC<CardProps> = ({
   children,
   className = '',
   onClick,
+  href,
   hoverable = true,
   id,
   animateIndex,
@@ -30,11 +33,34 @@ export const Card: React.FC<CardProps> = ({
       : {};
 
   const baseClasses = [
-    'bg-white rounded-lg border border-slate-100 shadow-sm flex flex-col',
-    hoverable ? 'hover:shadow-md hover:border-slate-200 transition-all duration-300' : '',
+    'bg-white rounded-2xl border border-slate-100 shadow-card flex flex-col h-full',
+    hoverable ? 'hover:shadow-card-hover hover:border-slate-200 transition-all duration-300' : '',
     onClick ? 'cursor-pointer' : '',
     className,
   ].filter(Boolean).join(' ');
+
+  // Preserve SPA routing while keeping native anchor semantics (open-in-new-tab, copy link).
+  const handleClick = (e: React.MouseEvent) => {
+    if (!onClick) return;
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (href) e.preventDefault();
+    onClick();
+  };
+
+  if (href) {
+    if (animateIndex !== undefined) {
+      return (
+        <motion.a id={id} href={href} onClick={handleClick} className={baseClasses} {...motionProps}>
+          {children}
+        </motion.a>
+      );
+    }
+    return (
+      <a id={id} href={href} onClick={handleClick} className={baseClasses}>
+        {children}
+      </a>
+    );
+  }
 
   if (animateIndex !== undefined) {
     return (

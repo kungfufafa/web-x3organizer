@@ -3,574 +3,863 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useCallback } from 'react';
-import { Search, Star, ArrowRight, ArrowLeft, Shield, Award, Smile, MessageSquare, Quote, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ArrowRight,
+  Award,
+  Briefcase,
+  CalendarDays,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Heart,
+  MapPin,
+  MessageSquare,
+  Phone,
+  Quote,
+  Search,
+  Shield,
+  Smile,
+  Star,
+  Users,
+} from 'lucide-react';
 import { initialLayanan, initialDestinasi, initialPaketTrip, initialBlogArtikel } from '../data';
-import { TripCard, DestinationCard, ServiceCard, ServiceIcon } from '../components/CardsAndUI';
-import { Button, Section, Card, Eyebrow } from '../components/ui';
-import { PaketTrip } from '../types';
+import { ServiceIcon } from '../components/CardsAndUI';
+import {
+  Button,
+  FinalCTA,
+  PageHero,
+  ResponsiveImage,
+  Section,
+  SectionHeader,
+  SplitSection,
+} from '../components/ui';
+import { Accordion } from '../components/ui/Accordion';
+import { HOME_FAQ_ITEMS } from '../data/faq';
+import { getMediaAlt, responsiveImageProps } from '../data/media';
+import { BlogArtikel, Destinasi, Layanan, PaketTrip } from '../types';
 
 interface HomeViewProps {
- onNavigate: (route: string) => void;
- onTanyaAdmin: (packageItemOrMsg: PaketTrip | string) => void;
+  onNavigate: (route: string) => void;
+  onTanyaAdmin: (packageItemOrMsg: PaketTrip | string) => void;
 }
 
+const generalInquiryMessage =
+  'Halo Admin, saya tertarik bertanya mengenai paket open trip / private trip yang tersedia.';
+
+const getPackageDestinationLabel = (packageItem: PaketTrip, destinations: Destinasi[]) => {
+  const names = destinations
+    .filter((destination) => packageItem.destinasi_ids.includes(destination.id))
+    .map((destination) => destination.name);
+
+  return names.length > 0 ? names.join(' + ') : packageItem.type;
+};
+
+// Navigate via SPA pushState while preserving real-anchor semantics (open-in-new-tab, copy link).
+const handleAnchorNav = (e: React.MouseEvent, handler: () => void) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  handler();
+};
+
+interface HomePackageCardProps {
+  packageItem: PaketTrip;
+  destinations: Destinasi[];
+  onNavigate: (route: string) => void;
+}
+
+const HomePackageCard: React.FC<HomePackageCardProps> = ({
+  packageItem,
+  destinations,
+  onNavigate,
+}) => {
+  const destinationLabel = getPackageDestinationLabel(packageItem, destinations);
+  const href = `/produk/${packageItem.slug}`;
+
+  return (
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+      <a
+        href={href}
+        onClick={(e) => handleAnchorNav(e, () => onNavigate(href))}
+        className="flex h-full flex-col text-left"
+        aria-label={`Lihat detail ${packageItem.name}`}
+      >
+        <div className="relative aspect-[4/3] w-full overflow-hidden">
+          <img
+            {...responsiveImageProps(packageItem.imageUrl)}
+            alt={getMediaAlt(packageItem.imageUrl, `${packageItem.name} di ${destinationLabel}`)}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/15 to-transparent" />
+          <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1.5 text-sm font-bold text-slate-900 shadow-sm">
+            {packageItem.type}
+          </span>
+        </div>
+
+        <div className="flex flex-1 flex-col p-6 md:p-7">
+          <div className="flex-1">
+            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-600">
+              <Clock className="h-4 w-4 text-amber-600" aria-hidden="true" />
+              {packageItem.duration_label}
+            </p>
+            <h3 className="font-display text-2xl font-bold leading-tight text-slate-900">
+              {packageItem.name}
+            </h3>
+          </div>
+
+          <div className="mt-7 flex items-end justify-between gap-5 border-t border-slate-100 pt-6">
+            <div>
+              <p className="text-sm font-semibold text-slate-500">Mulai dari</p>
+              <p className="font-display text-2xl font-bold text-slate-900">{packageItem.price_label}</p>
+            </div>
+            {/* Visual CTA only — the whole card is the link (no nested interactive). */}
+            <span
+              aria-hidden="true"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-primary px-5 py-2.5 text-xs font-bold tracking-wide text-white shadow-sm transition-colors duration-[250ms] min-h-[44px]"
+            >
+              Lihat Paket
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+      </a>
+    </article>
+  );
+};
+
+interface ServicePanelProps {
+  layanan: Layanan;
+  tripCount: number;
+  featured?: boolean;
+  href: string;
+  onSelect: () => void;
+}
+
+const ServicePanel: React.FC<ServicePanelProps> = ({ layanan, tripCount, featured = false, href, onSelect }) => (
+  <a
+    href={href}
+    onClick={(e) => handleAnchorNav(e, onSelect)}
+    className={[
+      'group flex h-full w-full flex-col justify-between rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1',
+      featured
+        ? 'bg-slate-950 p-8 text-white shadow-card-hover hover:bg-slate-900 md:p-10'
+        : 'bg-white p-6 text-slate-900 shadow-card hover:border-slate-200 hover:shadow-card-hover md:p-7',
+    ].join(' ')}
+  >
+    <div>
+      <div
+        className={[
+          'mb-7 flex h-14 w-14 items-center justify-center rounded-2xl',
+          featured ? 'bg-amber-500 text-slate-950' : 'bg-amber-100 text-slate-900',
+        ].join(' ')}
+      >
+        <ServiceIcon name={layanan.iconName} className="h-6 w-6" />
+      </div>
+      <p className={featured ? 'mb-3 text-sm font-semibold text-amber-300' : 'mb-3 text-sm font-semibold text-amber-700'}>
+        {tripCount} paket tersedia
+      </p>
+      <h3 className={featured ? 'font-display text-4xl font-bold leading-tight' : 'font-display text-2xl font-bold leading-tight'}>
+        {layanan.name}
+      </h3>
+      <p className={featured ? 'mt-5 max-w-md text-base leading-relaxed text-slate-200' : 'mt-4 text-base leading-relaxed text-slate-600'}>
+        {layanan.summary}
+      </p>
+    </div>
+    <span className={featured ? 'mt-10 inline-flex items-center gap-2 font-bold text-amber-300' : 'mt-8 inline-flex items-center gap-2 font-bold text-slate-900'}>
+      Eksplor layanan
+      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+    </span>
+  </a>
+);
+
+interface DestinationTileProps {
+  destination: Destinasi;
+  tripCount: number;
+  large?: boolean;
+  href: string;
+  onSelect: () => void;
+  className?: string;
+}
+
+const DestinationTile: React.FC<DestinationTileProps> = ({
+  destination,
+  tripCount,
+  large = false,
+  href,
+  onSelect,
+  className = '',
+}) => (
+  <a
+    href={href}
+    onClick={(e) => handleAnchorNav(e, onSelect)}
+    className={[
+      'group relative w-full overflow-hidden rounded-2xl text-left shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover aspect-[4/3]',
+      className,
+    ].join(' ')}
+  >
+    <img
+      {...responsiveImageProps(destination.imageUrl)}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      aria-hidden="true"
+      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+      referrerPolicy="no-referrer"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+    <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
+      <p className="mb-3 flex items-center gap-2 text-sm font-bold text-amber-300">
+        <MapPin className="h-4 w-4" aria-hidden="true" />
+        {destination.region}
+      </p>
+      <h3 className={large ? 'font-display text-5xl font-bold leading-none' : 'font-display text-3xl font-bold leading-tight'}>
+        {destination.name}
+      </h3>
+      {large && (
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-100">{destination.summary}</p>
+      )}
+      <div className="mt-7 flex items-center justify-between gap-5">
+        <span className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md">
+          {tripCount} paket
+        </span>
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-950 transition-transform group-hover:translate-x-1">
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </span>
+      </div>
+    </div>
+  </a>
+);
+
+interface ArticlePreviewProps {
+  article: BlogArtikel;
+  featured?: boolean;
+  onNavigate: (route: string) => void;
+}
+
+const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, featured = false, onNavigate }) => {
+  const href = `/blog/${article.slug}`;
+  if (featured) {
+    return (
+      <a
+        href={href}
+        onClick={(e) => handleAnchorNav(e, () => onNavigate(href))}
+        className="group grid overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover md:grid-cols-12"
+      >
+        <div className="relative aspect-[16/10] md:col-span-7">
+          <img
+            src={article.imageUrl}
+            alt=""
+            loading="lazy"
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent" />
+        </div>
+        <div className="flex flex-col justify-between p-7 md:col-span-5 md:p-9">
+          <div>
+            <p className="mb-4 text-sm font-bold text-amber-700">{article.category}</p>
+            <h3 className="font-display text-3xl font-bold leading-tight text-slate-900">{article.title}</h3>
+            <p className="mt-5 line-clamp-4 text-base leading-relaxed text-slate-600">{article.excerpt}</p>
+          </div>
+          <span className="mt-9 inline-flex items-center gap-2 font-bold text-slate-900">
+            Baca panduan
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          </span>
+        </div>
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      onClick={(e) => handleAnchorNav(e, () => onNavigate(href))}
+      className="group flex gap-5 border-t border-slate-200 py-6 text-left first:border-t-0 first:pt-0"
+    >
+      <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl">
+        <img
+          src={article.imageUrl}
+          alt=""
+          loading="lazy"
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-bold text-amber-700">{article.category}</p>
+        <h3 className="font-display text-xl font-bold leading-snug text-slate-900">{article.title}</h3>
+        <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
+          Baca
+          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+        </span>
+      </div>
+    </a>
+  );
+};
+
 export default function HomeView({ onNavigate, onTanyaAdmin }: HomeViewProps) {
- // Filter States for Quick Search
   const [selectedDest, setSelectedDest] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedDuration, setSelectedDuration] = useState<string>('');
-  const [activeSlide, setActiveSlide] = useState<number>(0);
 
-  const heroDestinations = initialDestinasi.slice(0, 4);
+  const featuredPackages = initialPaketTrip.filter((p) => p.is_featured && p.status === 'published');
+  const popularDestinations = initialDestinasi.filter((d) => d.status === 'active').slice(0, 4);
+  const recentArticles = initialBlogArtikel.slice(0, 3);
+  const heroDestination = initialDestinasi.find((destination) => destination.slug === 'bromo') ?? initialDestinasi[0];
+  const corporatePackage = initialPaketTrip.find((packageItem) => packageItem.slug === 'corporate-outing-malang-batu');
+  const familyPackage = initialPaketTrip.find((packageItem) => packageItem.slug === 'family-trip-batu-malang-edukatif');
 
-  const nextSlide = useCallback(() => setActiveSlide(prev => (prev + 1) % heroDestinations.length), [heroDestinations.length]);
-  const prevSlide = useCallback(() => setActiveSlide(prev => (prev - 1 + heroDestinations.length) % heroDestinations.length), [heroDestinations.length]);
-
-  const handleCarouselKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    let url = '/produk';
+    const params: string[] = [];
+    if (selectedDest) params.push(`dest=${selectedDest}`);
+    if (selectedType) params.push(`type=${selectedType}`);
+    if (selectedDuration) params.push(`dur=${selectedDuration}`);
+    if (params.length > 0) url += `?${params.join('&')}`;
+    onNavigate(url);
   };
 
- const featuredPackages = initialPaketTrip.filter(p => p.is_featured && p.status === 'published');
- const popularDestinations = initialDestinasi.filter(d => d.status === 'active').slice(0, 4);
- const recentArticles = initialBlogArtikel.slice(0, 3);
+  const reviews = [
+    {
+      id: 1,
+      name: 'Andi Saputra',
+      role: 'Corporate HR Specialist',
+      avatar: '/images/avatars/andi-saputra.svg',
+      review:
+        'Kualitas pelayanan tim sangat memuaskan. Mulai dari penjemputan hingga seluruh rundown acara berjalan sangat presisi dan on-time. Tim lapangan juga sangat asyik dan kooperatif dengan rombongan kami.',
+      rating: 5,
+    },
+    {
+      id: 2,
+      name: 'Riana Lestari',
+      role: 'Ketua Komunitas',
+      avatar: '/images/avatars/riana-lestari.svg',
+      review:
+        'Awalnya kami mencari organizer yang bisa mengakomodasi puluhan orang dengan ragam usia. Ternyata solusinya sangat praktis, fasilitas memadai, dan harga sangat transparan tanpa biaya tersembunyi.',
+      rating: 5,
+    },
+    {
+      id: 3,
+      name: 'Keluarga Gunawan',
+      role: 'Liburan Keluarga',
+      avatar: '/images/avatars/keluarga-gunawan.svg',
+      review:
+        'Bawa anak kecil dan lansia ternyata tetap nyaman karena pace turnya santai sesuai request kami. Penginapan bersih, makanan cocok untuk semua umur, layanannya benar-benar bintang lima.',
+      rating: 5,
+    },
+  ];
 
- // Search Submission
- const handleSearchSubmit = (e: React.FormEvent) => {
- e.preventDefault();
- // Build query params concept or navigate to /produk with active filters
- let url = '/produk';
- const params: string[] = [];
- if (selectedDest) params.push(`dest=${selectedDest}`);
- if (selectedType) params.push(`type=${selectedType}`);
- if (selectedDuration) params.push(`dur=${selectedDuration}`);
- if (params.length > 0) {
- url += '?' + params.join('&');
- }
- onNavigate(url);
- };
+  const trustItems = [
+    { label: 'Admin responsif', value: '24/7', icon: MessageSquare },
+    { label: 'Format trip', value: '4 layanan', icon: Users },
+    { label: 'Destinasi aktif', value: `${initialDestinasi.filter((d) => d.status === 'active').length} kota`, icon: MapPin },
+    { label: 'Booking jelas', value: 'WA resmi', icon: CheckCircle },
+  ];
 
- const reviews = [
- {
- id: 1,
- name: "Andi Saputra",
- role: "Corporate HR Specialist",
- avatar: "/images/avatars/andi-saputra.svg",
- review: "Kualitas pelayanan tim sangat memuaskan. Mulai dari penjemputan hingga seluruh rundown acara berjalan sangat presisi dan on-time. Tim lapangan juga sangat asyik dan kooperatif dengan rombongan kami.",
- rating: 5
- },
- {
- id: 2,
- name: "Riana Lestari",
- role: "Ketua Komunitas",
- avatar: "/images/avatars/riana-lestari.svg",
- review: "Awalnya kami mencari organizer yang bisa mengakomodasi puluhan orang dengan ragam usia. Ternyata solusinya sangat praktis, fasilitas memadai, dan harga sangat transparan tanpa biaya tersembunyi.",
- rating: 5
- },
- {
- id: 3,
- name: "Keluarga Gunawan",
- role: "Liburan Keluarga",
- avatar: "/images/avatars/keluarga-gunawan.svg",
- review: "Bawa anak kecil dan lansia ternyata tetap nyaman karena pace turnya santai sesuai request kami. Penginapan bersih, makanan cocok untuk semua umur, layanannya benar-benar bintang lima.",
- rating: 5
- }
- ];
+  const commitments = [
+    {
+      title: 'Itinerary transparan',
+      text: 'Jadwal, meeting point, fasilitas, dan kebutuhan tambahan dijelaskan sebelum pembayaran.',
+      icon: CalendarDays,
+    },
+    {
+      title: 'Armada bersih dan siap jalan',
+      text: 'Jeep, Hiace, dan kendaraan keluarga dipilih sesuai medan, jarak, dan ukuran rombongan.',
+      icon: Award,
+    },
+    {
+      title: 'Tim lokal yang paham ritme destinasi',
+      text: 'Rute disusun mengikuti kondisi lapangan, musim ramai, dan kebutuhan peserta.',
+      icon: Smile,
+    },
+    {
+      title: 'Pendampingan admin dari awal',
+      text: 'Konsultasi, kuotasi, reminder, dan koordinasi perjalanan tetap berada dalam satu alur.',
+      icon: Shield,
+    },
+  ];
 
- return (
- <div id="home-view-container" className="w-full @theme font-sans bg-surface-page text-slate-900 md:pb-0">
-  {/* 1. HERO SECTION WITH CAROUSEL AESTHETIC */}
-  <section
-    className="relative w-full h-[420px] md:h-[520px] bg-slate-950 flex items-center justify-center group border-b border-slate-100"
-    role="region"
-    aria-roledescription="carousel"
-    aria-label="Destinasi unggulan"
-    tabIndex={0}
-    onKeyDown={handleCarouselKeyDown}
-  >
-    
-    {/* Slides Container */}
-    <div className="relative w-full h-full flex items-center justify-center">
-      {heroDestinations.map((dest, index) => {
-        const offset = index - activeSlide;
-        const isCenter = offset === 0;
-        const isLeft = offset === -1 || (activeSlide === 0 && index === heroDestinations.length - 1);
-        const isRight = offset === 1 || (activeSlide === heroDestinations.length - 1 && index === 0);
-        
-        let transformClass = "opacity-0 pointer-events-none";
-        let zIndex = "z-0";
-        let overlayClass = "bg-slate-950/70";
-        let imgEffectClass = "opacity-100";
-        
-        if (isCenter) {
-          transformClass = "opacity-100";
-          zIndex = "z-20";
-          overlayClass = "bg-gradient-to-t from-slate-950/88 via-slate-950/28 to-transparent";
-          imgEffectClass = "opacity-100";
-        } else if (isLeft) {
-          transformClass = "opacity-0 pointer-events-none";
-          zIndex = "z-10";
-        } else if (isRight) {
-          transformClass = "opacity-0 pointer-events-none";
-          zIndex = "z-10";
+  return (
+    <div id="home-view-container" className="w-full bg-surface-page text-slate-900 md:pb-0">
+      <PageHero
+        density="hero"
+        eyebrow="X3 Organizer"
+        title="Trip rapi, rombongan tenang"
+        subtitle="Open trip, private trip, family trip, dan corporate outing ke Bromo, Bali, Nusa Penida, Malang, dan Batu dengan itinerary jelas dan admin WhatsApp yang sigap."
+        centered={false}
+        ratio="5-7"
+        align="start"
+        titleScale="hero"
+        actions={
+          <>
+            <Button
+              variant="whatsapp"
+              size="lg"
+              onClick={() => onTanyaAdmin(generalInquiryMessage)}
+              className="shadow-card-hover"
+            >
+              <Phone className="h-5 w-5" aria-hidden="true" />
+              Konsultasi WhatsApp
+            </Button>
+            <Button
+              variant="outlineOnDark"
+              size="lg"
+              href="/produk"
+              onClick={() => onNavigate('/produk')}
+            >
+              Lihat Paket Trip
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </>
         }
+        media={
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-dialog">
+            <ResponsiveImage
+              {...responsiveImageProps(heroDestination.imageUrl, '(min-width: 1024px) 50vw, 100vw')}
+              alt={getMediaAlt(heroDestination.imageUrl, `Pemandangan wisata ${heroDestination.name}, ${heroDestination.region}`)}
+              aspect="aspect-[4/3] lg:aspect-[3/2]"
+              wrapperClassName="rounded-2xl"
+              loading="eager"
+              fetchPriority="high"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+            <div className="absolute left-5 right-5 top-5 flex items-center justify-between gap-4 md:left-7 md:right-7 md:top-7">
+              <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 shadow-sm">
+                {heroDestination.region}
+              </span>
+              <span className="hidden rounded-full bg-slate-950/70 px-4 py-2 text-sm font-bold text-white backdrop-blur-md sm:inline-flex">
+                Focal trip: {heroDestination.name}
+              </span>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 p-5 md:p-7 lg:p-8">
+              <p className="mb-3 text-sm font-bold text-amber-300">Destinasi utama</p>
+              <h2 className="font-display text-3xl font-bold leading-none text-white md:text-5xl">
+                {heroDestination.name}
+              </h2>
+              <div className="mt-6 grid gap-3 rounded-2xl bg-white/95 p-4 text-slate-900 shadow-card backdrop-blur-md sm:grid-cols-3 md:p-5">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">Meeting point</p>
+                  <p className="mt-1 font-bold">Malang / Surabaya</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">Format</p>
+                  <p className="mt-1 font-bold">Open & private</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">Booking</p>
+                  <p className="mt-1 font-bold">Konsultasi WA</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      />
 
-        return (
-          <div 
-            key={dest.id}
-            className={`absolute top-0 left-0 w-full h-full transition-all duration-700 ease-in-out ${transformClass} ${zIndex} flex items-center justify-center`}
+      <Section surface="transparent" density="none" container="site" className="-mt-10 relative z-20">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-dialog md:p-5 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end lg:gap-5"
           >
-            <div className={`relative w-full h-full rounded-none transition-all duration-700 ${imgEffectClass}`}>
-               <img 
-                 src={dest.imageUrl} 
-                 alt={`Pemandangan wisata ${dest.name}, ${dest.region}`}
-                 className="absolute inset-0 w-full h-full object-cover"
-                 aria-hidden={!isCenter}
-               />
-               <div className={`absolute inset-0 ${overlayClass} transition-colors duration-700`}></div>
-               
-               {isCenter && (
-                 <div className="absolute bottom-0 left-0 right-0 p-6 pb-20 md:p-10 md:pb-24 lg:p-14 lg:pb-28 flex flex-col justify-end gap-6 max-w-7xl mx-auto w-full h-full">
-                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 w-full">
-                     <div className="space-y-4 max-w-2xl">
-                       <div className="inline-flex items-center gap-2 bg-slate-950/72 border border-white/15 text-white text-[10px] font-bold tracking-widest uppercase rounded-full px-3 py-1.5">
-                         <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                         {dest.region}
-                       </div>
-                       <h2 className="text-4xl md:text-6xl font-bold font-display text-white tracking-tight leading-none">
-                         {dest.name}
-                       </h2>
-                       
-                       <p className="text-slate-100 text-sm md:text-base font-sans font-medium max-w-md leading-relaxed">
-                         Eksplorasi destinasi unggulan di {dest.region} dengan layanan privat dan jadwal yang fleksibel.
-                       </p>
-                     </div>
-                     
-                     <div className="w-full md:w-auto shrink-0 pb-2 mt-4 md:mt-0">
-                       <Button
-                         variant="outline"
-                         size="lg"
-                         onClick={() => onNavigate(`/produk?dest=${dest.slug}`)}
-                         className="uppercase tracking-widest w-full md:w-auto border-white/70"
-                       >
-                         Lihat Paket
-                         <ArrowRight className="w-4 h-4" />
-                       </Button>
-                     </div>
-                   </div>
-                 </div>
-               )}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <label className="mb-2 block text-sm font-bold text-slate-600" htmlFor="home-destination">
+                Destinasi
+              </label>
+              <select
+                id="home-destination"
+                value={selectedDest}
+                onChange={(e) => setSelectedDest(e.target.value)}
+                className="w-full bg-transparent text-base font-bold text-slate-900 outline-none"
+              >
+                <option value="">Semua destinasi</option>
+                {initialDestinasi.map((destination) => (
+                  <option key={destination.id} value={destination.slug}>
+                    {destination.name} ({destination.region})
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <label className="mb-2 block text-sm font-bold text-slate-600" htmlFor="home-trip-type">
+                Tipe trip
+              </label>
+              <select
+                id="home-trip-type"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full bg-transparent text-base font-bold text-slate-900 outline-none"
+              >
+                <option value="">Semua tipe</option>
+                <option value="Open Trip">Open Trip</option>
+                <option value="Private Trip">Private Trip</option>
+                <option value="Corporate Outing">Corporate Outing</option>
+                <option value="Family Trip">Family Trip</option>
+              </select>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <label className="mb-2 block text-sm font-bold text-slate-600" htmlFor="home-duration">
+                Durasi
+              </label>
+              <select
+                id="home-duration"
+                value={selectedDuration}
+                onChange={(e) => setSelectedDuration(e.target.value)}
+                className="w-full bg-transparent text-base font-bold text-slate-900 outline-none"
+              >
+                <option value="">Semua durasi</option>
+                <option value="1 Hari">1 Hari</option>
+                <option value="2 Hari 1 Malam">2 Hari 1 Malam</option>
+                <option value="3 Hari 2 Malam">3 Hari 2 Malam</option>
+              </select>
+            </div>
+
+            <Button type="submit" variant="primary" size="lg" className="h-full min-h-[56px] w-full lg:w-auto">
+              <Search className="h-5 w-5" aria-hidden="true" />
+              Cari Paket
+            </Button>
+          </form>
+      </Section>
+
+      <Section surface="card" density="default" container="site">
+        <SplitSection ratio="5-7" mediaPosition="right" align="start">
+          <div>
+            <SectionHeader
+              align="left"
+              eyebrow="Tentang Kami"
+              title="Partner perjalanan yang mengurus ritme rombongan dari awal."
+              description="Kami mengelola perjalanan wisata dengan jadwal yang mudah dibaca, komunikasi yang jelas, dan tim lapangan yang memahami karakter setiap destinasi."
+            />
+            <div className="mt-10 grid grid-cols-2 gap-4">
+              {trustItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                    <Icon className="mb-5 h-6 w-6 text-amber-700" aria-hidden="true" />
+                    <p className="font-display text-2xl font-bold text-slate-900">{item.value}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-600">{item.label}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        );
-      })}
-    </div>
-
-    {/* Controls */}
-    <button 
-      onClick={prevSlide}
-      aria-label="Slide sebelumnya"
-      className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-30 p-2 md:p-3 text-white/65 hover:text-white transition-colors"
-    >
-      <ArrowLeft className="w-7 h-7 md:w-10 md:h-10 drop-shadow-md" />
-    </button>
-    <button 
-      onClick={nextSlide}
-      aria-label="Slide berikutnya"
-      className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-30 touch-target p-2 md:p-3 text-white/65 hover:text-white transition-colors"
-    >
-      <ArrowRight className="w-7 h-7 md:w-10 md:h-10 drop-shadow-md" />
-    </button>
-
-    <div className="absolute bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 z-30 flex gap-2" role="tablist" aria-label="Indikator slide">
-      {heroDestinations.map((dest, index) => (
-        <button
-          key={dest.id}
-          type="button"
-          role="tab"
-          aria-selected={index === activeSlide}
-          aria-label={`Slide ${index + 1}: ${dest.name}`}
-          onClick={() => setActiveSlide(index)}
-          className={`touch-target h-2 rounded-full transition-all ${index === activeSlide ? 'w-7 bg-white' : 'w-2 bg-white/42 hover:bg-white/60'}`}
-        />
-      ))}
-    </div>
-  </section>
-
- {/* 2. QUICK SEARCH & TENTANG KAMI */}
- <section className="w-full bg-white flex flex-col relative z-20">
-  <div className="max-w-7xl mx-auto w-full px-4 md:px-8 -mt-8">
-   <form 
-   onSubmit={handleSearchSubmit}
-   className="bg-white/96 border border-slate-100 p-4 md:p-6 rounded-lg shadow-[0_20px_55px_-20px_rgba(7,30,73,0.15)] md:flex items-center gap-6 space-y-4 md:space-y-0"
-   >
-   <div className="flex-1 space-y-1 md:space-y-2">
-   <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Destinasi</label>
-   <select 
-   value={selectedDest} 
-   onChange={(e) => setSelectedDest(e.target.value)}
-   className="w-full text-slate-900 text-sm md:text-base font-bold focus:ring-0 cursor-pointer bg-transparent p-0 outline-none"
-   >
-   <option value="">Semua Destinasi</option>
-   {initialDestinasi.map(d => (
-   <option key={d.id} value={d.slug}>{d.name} ({d.region})</option>
-   ))}
-   </select>
-   </div>
-   
-   <div className="hidden md:block w-px h-12 bg-slate-200"></div>
-
-   <div className="flex-1 space-y-1 md:space-y-2">
-   <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Tipe Trip</label>
-   <select 
-   value={selectedType}
-   onChange={(e) => setSelectedType(e.target.value)}
-   className="w-full text-slate-900 text-sm md:text-base font-bold focus:ring-0 cursor-pointer bg-transparent p-0 outline-none"
-   >
-   <option value="">Semua Tipe</option>
-   <option value="Open Trip">Open Trip</option>
-   <option value="Private Trip">Private Trip</option>
-   <option value="Corporate Outing">Corporate Outing</option>
-   <option value="Family Trip">Family Trip</option>
-   </select>
-   </div>
-
-   <div className="hidden md:block w-px h-12 bg-slate-200"></div>
-
-   <div className="flex-1 space-y-1 md:space-y-2">
-   <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Durasi</label>
-   <select 
-   value={selectedDuration}
-   onChange={(e) => setSelectedDuration(e.target.value)}
-   className="w-full text-slate-900 text-sm md:text-base font-bold focus:ring-0 cursor-pointer bg-transparent p-0 outline-none"
-   >
-   <option value="">Semua Durasi</option>
-   <option value="1 Hari">1 Hari</option>
-   <option value="2 Hari 1 Malam">2 Hari 1 Malam</option>
-   <option value="3 Hari 2 Malam">3 Hari 2 Malam</option>
-   </select>
-   </div>
-
-   <Button type="submit" variant="primary" size="lg" className="w-full md:w-auto p-4 touch-target min-h-[48px]">
-   <Search className="w-5 h-5" />
-   <span className="md:hidden text-[11px]">Cari Paket</span>
-   <span className="hidden md:inline">Cari Paket</span>
-   </Button>
-   </form>
-  </div>
-
-  <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 lg:py-28 w-full">
-   <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-   <div className="lg:col-span-7 space-y-5">
-   <Eyebrow>Tentang Kami</Eyebrow>
-   <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight font-display leading-tight max-w-3xl">
-   X3 Organizer: Partner Perjalanan yang Berkomitmen pada Pengalaman Rombongan yang Rapi dan Nyaman
-   </h2>
-   <p className="text-slate-600 text-sm md:text-base leading-relaxed max-w-3xl">
-   Kami mengelola open trip, private trip, family trip, dan corporate outing dengan itinerary jelas, admin responsif, serta tim lapangan yang memahami kondisi destinasi secara langsung.
-   </p>
-   <div className="flex flex-wrap gap-3 pt-2">
-   <span className="rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-[10px] font-bold tracking-wide text-slate-700">Admin 24/7</span>
-   <span className="rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-[10px] font-bold tracking-wide text-slate-700">Itinerary Transparan</span>
-   <span className="rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-[10px] font-bold tracking-wide text-slate-700">Tim Lokal</span>
-   </div>
-   </div>
-   <div className="lg:col-span-5 relative">
-     <div className="grid grid-cols-2 gap-4">
-       <div className="space-y-4 mt-8">
-         <img src="/images/destinations/bromo-sunrise.jpg" alt="Bromo" className="w-full h-40 object-cover rounded-2xl shadow-lg" referrerPolicy="no-referrer" />
-         <img src="/images/destinations/bali-culture.jpg" alt="Bali" className="w-full h-48 object-cover rounded-2xl shadow-lg" referrerPolicy="no-referrer" />
-       </div>
-       <div className="space-y-4">
-         <img src="/images/destinations/nusa-penida-coast.jpg" alt="Nusa Penida" className="w-full h-48 object-cover rounded-2xl shadow-lg" referrerPolicy="no-referrer" />
-         <div className="w-full h-40 bg-slate-50 rounded-2xl shadow-inner flex items-center justify-center p-6">
-           <img src="/logo.png" alt="X3 Organizer" className="w-full h-full object-contain opacity-80" />
-         </div>
-       </div>
-     </div>
-   </div>
-   </div>
-  </div>
- </section>
-
-  {/* 3. LAYANAN CATEGORY GRID */}
-  <Section bordered bg="muted">
-  <div className="text-center space-y-4 mb-12 md:mb-14">
-  <Eyebrow className="normal-case tracking-wider">Jenis Layanan</Eyebrow>
-  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight font-display">
-  Pilihan Perjalanan Sesuai Kebutuhan
-  </h2>
-  <p className="text-sm md:text-base text-slate-600 max-w-2xl mx-auto mt-4 leading-relaxed">
-  Apakah Anda solo traveler hemat budget, rombongan bulan madu romantis, reuni akbar, ataupun gathering dinas? Kami punya formatnya.
-  </p>
-  </div>
-
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
- {initialLayanan.map(lay => {
- const count = initialPaketTrip.filter(p => p.layanan_ids.includes(lay.id)).length;
- return (
- <ServiceCard 
- key={lay.id} 
- layanan={lay} 
- tripCount={count} 
- onSelect={() => onNavigate(`/layanan/${lay.slug}`)} 
- 
- />
- );
- })}
- </div>
- </Section>
-
-  {/* 4. PAKET TRIP UNGGULAN (is_featured = true) */}
-  <Section bordered className="bg-white">
-  <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12 md:mb-14">
-  <div className="space-y-4">
-  <Eyebrow className="normal-case tracking-wider">Rekomendasi</Eyebrow>
-  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight font-display">
-  Paket Trip Unggulan
-  </h2>
-  </div>
- 
- <button 
- onClick={() => onNavigate('/produk')}
- className="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition tracking-wide"
- >
- Lihat Semua Trip
- <ArrowRight className="w-4 h-4" />
- </button>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
- {featuredPackages.map((pkg, index) => (
- <TripCard 
- key={pkg.id} 
- packageItem={pkg} 
- destinationsList={initialDestinasi} 
- animateIndex={index}
- onSelect={(slug) => onNavigate(`/produk/${slug}`)}
- onTanyaAdmin={(item, e) => {
- e.stopPropagation();
- onTanyaAdmin(item);
- }}
- />
- ))}
- </div>
- </Section>
-
-  {/* 5. DESTINASI POPULER */}
-  <Section bordered bg="muted">
-  <div className="text-center space-y-4 mb-12 md:mb-14">
-  <Eyebrow className="normal-case tracking-wider">Destinasi</Eyebrow>
-  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight font-display">
-  Jelajah Destinasi Favorit
-  </h2>
-  <p className="text-sm md:text-base text-slate-600 max-w-2xl mx-auto mt-4 leading-relaxed">
-  Dari sunrise emas lautan pasir Jawa Timur hingga pura pesisir tropis eksotis Bali.
-  </p>
-  </div>
-
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
- {popularDestinations.map(dest => {
- const count = initialPaketTrip.filter(p => p.destinasi_ids.includes(dest.id)).length;
- return (
- <DestinationCard 
- key={dest.id} 
- destination={dest} 
- tripCount={count} 
- onSelect={() => onNavigate(`/produk?dest=${dest.slug}`)} 
- />
- );
- })}
- </div>
- </Section>
-
-  {/* 6. KENAPA PILIH KAMI */}
-  <Section bordered className="bg-white">
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
-  <div className="lg:col-span-5 space-y-6">
-  <Eyebrow className="normal-case tracking-wider">Nilai Tambah</Eyebrow>
-  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight font-display leading-[1.12]">
-  Komitmen Kami Melayani Tanpa Batas
-  </h2>
-  <p className="text-slate-600 text-sm md:text-base leading-relaxed font-sans">
-  Kami percaya, liburan adalah momen melepas penat terbaik. Oleh sebab itu, kami menghadirkan pengelolaan trip yang andal, akuntabel, dan transparan dari awal hingga kepulangan Anda.
-  </p>
- <div className="pt-4">
- <Button variant="accent" onClick={() => onNavigate('/produk')}>
- Eksplor Katalog Paket
- </Button>
- </div>
- </div>
-
- <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
- <div className="space-y-3">
- <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
- <Shield className="w-6 h-6" />
- </div>
- <h3 className="text-slate-900 font-display font-bold text-base">Berbadan Hukum & Tepercaya</h3>
- <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
- Izin usaha lengkap dan terverifikasi amanah, menjamin transaksi pembayaran Anda tanpa cemas calo palsu.
- </p>
- </div>
-
- <div className="space-y-3">
- <div className="flex items-center gap-3 mb-2">
-      <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
-        <Award className="w-5 h-5" />
-      </div>
-      <h3 className="text-slate-900 font-display font-bold text-base">Armada Terstandar & Bersih</h3>
-    </div>
- <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
- Kami mengoperasikan Jeep 4x4 dan MVP pribadi ber-AC yang selalu dicek kelayakan mesinnya berkala.
- </p>
- </div>
-
- <div className="space-y-3">
- <div className="flex items-center gap-3 mb-2">
-      <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100 shrink-0">
-        <Smile className="w-5 h-5" />
-      </div>
-      <h3 className="text-slate-900 font-display font-bold text-base">Pemandu Lokal Berpengalaman</h3>
-    </div>
- <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
- Supir merangkap pemandu ramah yang pandai memotret aesthetic dengan angle terbaik di HP Anda.
- </p>
- </div>
-
- <div className="space-y-3">
- <div className="flex items-center gap-3 mb-2">
-      <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shrink-0">
-        <MessageSquare className="w-5 h-5" />
-      </div>
-      <h3 className="text-slate-900 font-display font-bold text-base">Layanan Admin Sigap 24/7</h3>
-    </div>
- <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
- Butuh bantuan darurat di tengah perjalanan? Tim operasional hotline kami siaga mendampingi Anda penuh.
- </p>
- </div>
- </div>
- </div>
- </Section>
-
-  {/* 7. TESTIMONIALS */}
-  <section className="bg-slate-950 text-white border-t border-slate-900 px-4 md:px-8 py-20 lg:py-28 relative bgn-pattern-white bgn-pattern-right-top">
-  <div className="max-w-7xl mx-auto relative z-10">
-    <div className="flex flex-col items-center text-center gap-4 mb-16 md:mb-20 max-w-3xl mx-auto">
-      <span className="bg-white/10 border border-white/15 text-amber-500 text-[10px] md:text-xs font-bold uppercase tracking-widest py-1.5 px-4 rounded-full shadow-sm">
-        Ulasan Pelanggan
-      </span>
-      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight font-display leading-[1.1]">
-        Cerita Perjalanan Mereka
-      </h2>
-      <p className="text-slate-300 text-sm md:text-base leading-relaxed mt-2 max-w-prose mx-auto">
-        Kami tidak sekadar menjual paket trip, kami membantu merangkai ingatan manis yang layak diceritakan ulang seumur hidup.
-      </p>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-      {reviews.map((rev) => (
-        <div key={rev.id} className="bg-white text-slate-900 rounded-lg border border-white/10 p-7 md:p-8 flex flex-col justify-between hover:-translate-y-1.5 transition-all duration-400 group">
-          <div className="space-y-6 relative">
-            <Quote className="absolute -top-2 -left-3 w-14 h-14 text-slate-100 rotate-180 -z-10 group-hover:text-amber-500/20 transition-colors duration-300" />
-            
-            <div className="flex gap-1 text-amber-500 relative z-10">
-              {Array.from({ length: rev.rating }).map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-current" />
-              ))}
-            </div>
-            
-            <p className="text-slate-600 text-sm leading-relaxed relative z-10 font-sans font-medium italic">
-              "{rev.review}"
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 pt-6 mt-6 border-t border-slate-100">
-            <div className="relative shrink-0">
-              <img 
-                src={rev.avatar} 
-                alt={rev.name} 
-                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm group-hover:border-amber-500 transition-colors duration-300 relative z-10" 
-                referrerPolicy="no-referrer"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <img
+              src="/images/destinations/nusa-penida-kelingking.jpg"
+              alt="Tebing Kelingking Nusa Penida"
+              loading="lazy"
+              className="h-56 w-full rounded-2xl object-cover shadow-card md:h-72"
+            />
+            <div className="grid gap-4">
+              <img
+                src="/images/packages/corporate-outing-malang-batu.jpg"
+                alt="Rombongan corporate outing di Malang Batu"
+                loading="lazy"
+                className="h-48 w-full rounded-2xl object-cover shadow-card md:h-56"
               />
-              <div className="absolute inset-0 rounded-full bg-amber-500/20 scale-110 -z-0 blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="flex min-h-32 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-8 shadow-card md:min-h-40">
+                <img src="/images/brand/x3-organizer-logo.png" width="512" height="512" alt="X3 Organizer" className="max-h-20 w-auto object-contain" />
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-slate-900 font-bold font-display tracking-tight text-sm truncate">{rev.name}</h3>
-              <p className="text-slate-500 text-xs font-semibold mt-0.5 truncate">{rev.role}</p>
+          </div>
+        </SplitSection>
+      </Section>
+
+      <Section surface="page" density="default" container="site" bordered>
+        <SectionHeader
+          align="left"
+          eyebrow="Jenis Layanan"
+          title="Pilih format perjalanan sebelum memilih destinasi."
+          description="X3 Organizer melayani perjalanan hemat, privat, korporat, dan keluarga dengan ritme yang disesuaikan dengan jumlah peserta."
+          contentGap
+        />
+        <div className="grid gap-6 lg:grid-cols-12">
+          {initialLayanan[0] && (
+            <div className="lg:col-span-5">
+              <ServicePanel
+                layanan={initialLayanan[0]}
+                tripCount={initialPaketTrip.filter((packageItem) => packageItem.layanan_ids.includes(initialLayanan[0].id)).length}
+                featured
+                href={`/layanan/${initialLayanan[0].slug}`}
+                onSelect={() => onNavigate(`/layanan/${initialLayanan[0].slug}`)}
+              />
             </div>
+          )}
+          <div className="grid gap-6 md:grid-cols-3 lg:col-span-7 lg:grid-cols-1">
+            {initialLayanan.slice(1).map((layanan) => {
+              const count = initialPaketTrip.filter((packageItem) => packageItem.layanan_ids.includes(layanan.id)).length;
+              return (
+                <ServicePanel
+                  key={layanan.id}
+                  layanan={layanan}
+                  tripCount={count}
+                  href={`/layanan/${layanan.slug}`}
+                  onSelect={() => onNavigate(`/layanan/${layanan.slug}`)}
+                />
+              );
+            })}
           </div>
         </div>
-      ))}
+      </Section>
+
+      <Section surface="card" density="default" container="site">
+        <div className="section-header-gap flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeader
+            align="left"
+            eyebrow="Rekomendasi"
+            title="Paket unggulan dengan keputusan yang lebih mudah."
+          />
+          <a
+            href="/produk"
+            onClick={(e) => handleAnchorNav(e, () => onNavigate('/produk'))}
+            className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-5 py-3 font-bold text-slate-900 transition-colors hover:bg-slate-50 md:self-auto"
+          >
+            Semua paket
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
+
+        <div className="grid-cards md:grid-cols-2 lg:grid-cols-3">
+          {featuredPackages.map((packageItem) => (
+            <HomePackageCard
+              key={packageItem.id}
+              packageItem={packageItem}
+              destinations={initialDestinasi}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
+      </Section>
+
+      <Section surface="page" density="default" container="site" bordered>
+        <SectionHeader
+          align="left"
+          eyebrow="Destinasi"
+          title="Satu peta rasa: sunrise, tebing, kota sejuk, dan rekreasi keluarga."
+          description="Setiap destinasi dipilih karena punya karakter perjalanan yang jelas, sehingga rombongan bisa memilih suasana sebelum membahas detail paket."
+          width="wide"
+          contentGap
+        />
+        <div className="grid-cards lg:grid-cols-12 lg:auto-rows-fr">
+            {popularDestinations.map((destination, index) => {
+              const count = initialPaketTrip.filter((packageItem) => packageItem.destinasi_ids.includes(destination.id)).length;
+              const isLarge = index === 0 || index === 3;
+              return (
+                <DestinationTile
+                  key={destination.id}
+                  destination={destination}
+                  tripCount={count}
+                  large={isLarge}
+                  className={isLarge ? 'lg:col-span-7' : 'lg:col-span-5'}
+                  href={`/produk?dest=${destination.slug}`}
+                  onSelect={() => onNavigate(`/produk?dest=${destination.slug}`)}
+                />
+              );
+            })}
+        </div>
+      </Section>
+
+      <Section surface="dark" density="default" container="site">
+        <SplitSection ratio="5-7" mediaPosition="right" align="start">
+          <div>
+            <SectionHeader
+              align="left"
+              inverted
+              eyebrow="Komitmen Layanan"
+              title="Perjalanan terasa ringan ketika detailnya sudah dijaga."
+              description="Dari konsultasi awal sampai pulang, tim kami menjaga alur supaya peserta tidak menebak-nebak fasilitas, jadwal, atau titik kumpul."
+              actions={
+                <Button variant="accent" size="lg" href="/produk" onClick={() => onNavigate('/produk')}>
+                  Eksplor Katalog
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              }
+            />
+          </div>
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            {commitments.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="grid gap-5 py-7 sm:grid-cols-[auto_1fr] sm:items-start md:py-8">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-amber-300">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-2xl font-bold text-white">{item.title}</h3>
+                    <p className="mt-3 text-base leading-relaxed text-slate-300">{item.text}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SplitSection>
+      </Section>
+
+      <Section surface="card" density="default" container="site">
+        <SplitSection ratio="7-5" mediaPosition="left" align="start">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-card-hover lg:min-h-[24rem]">
+            <img
+              src="/images/packages/corporate-outing-malang-batu.jpg"
+              alt="Corporate outing dan family trip di area Malang Batu"
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white md:p-8">
+              <p className="mb-3 text-sm font-bold text-amber-300">Corporate & family highlight</p>
+              <h2 className="measure-section-title font-display text-3xl font-bold leading-tight md:text-4xl">
+                Rombongan besar tetap bisa terasa personal.
+              </h2>
+            </div>
+          </div>
+          <div>
+            <SectionHeader
+              align="left"
+              eyebrow="Untuk Grup"
+              title="Outing kantor atau liburan keluarga butuh ritme yang berbeda."
+              description="Tim HR butuh rundown, invoice, dan koordinasi peserta. Keluarga butuh tempo yang santai, kendaraan nyaman, dan destinasi yang aman untuk anak maupun lansia."
+            />
+            <div className="mt-9 grid gap-4">
+                <a
+                  href={corporatePackage ? `/produk/${corporatePackage.slug}` : '/layanan/corporate-outing'}
+                  onClick={(e) => handleAnchorNav(e, () => onNavigate(corporatePackage ? `/produk/${corporatePackage.slug}` : '/layanan/corporate-outing'))}
+                  className="group flex items-center justify-between gap-5 rounded-2xl border border-slate-100 bg-slate-50 p-5 text-left transition-colors hover:bg-white hover:shadow-card"
+                >
+                  <span className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950 text-amber-300">
+                      <Briefcase className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong className="block font-display text-xl text-slate-900">Corporate Outing</strong>
+                      <span className="text-sm font-semibold text-slate-600">Rundown, games, dan kebutuhan kantor</span>
+                    </span>
+                  </span>
+                  <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </a>
+
+                <a
+                  href={familyPackage ? `/produk/${familyPackage.slug}` : '/layanan/family-trip'}
+                  onClick={(e) => handleAnchorNav(e, () => onNavigate(familyPackage ? `/produk/${familyPackage.slug}` : '/layanan/family-trip'))}
+                  className="group flex items-center justify-between gap-5 rounded-2xl border border-slate-100 bg-slate-50 p-5 text-left transition-colors hover:bg-white hover:shadow-card"
+                >
+                  <span className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-slate-900">
+                      <Heart className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong className="block font-display text-xl text-slate-900">Family Trip</strong>
+                      <span className="text-sm font-semibold text-slate-600">Tempo santai dan pilihan destinasi ramah keluarga</span>
+                    </span>
+                  </span>
+                  <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </a>
+              </div>
+          </div>
+        </SplitSection>
+      </Section>
+
+      <Section surface="page" density="default" container="content" bordered>
+        <SectionHeader
+          align="left"
+          eyebrow="Ulasan Pelanggan"
+          title="Yang membuat perjalanan terasa aman adalah cara tim merespons."
+          contentGap
+        />
+        <div className="grid-cards lg:grid-cols-12">
+            <article className="rounded-2xl bg-slate-950 p-7 text-white shadow-card-hover md:p-10 lg:col-span-7">
+              <Quote className="h-14 w-14 text-amber-400" aria-hidden="true" />
+              <div className="mt-8 flex gap-1 text-amber-400" role="img" aria-label={`${reviews[0].rating} dari 5 bintang`}>
+                {Array.from({ length: reviews[0].rating }).map((_, index) => (
+                  <Star key={index} className="h-5 w-5 fill-current" aria-hidden="true" />
+                ))}
+              </div>
+              <p className="mt-7 max-w-3xl font-display text-2xl font-semibold leading-snug md:text-3xl lg:text-4xl">
+                "{reviews[0].review}"
+              </p>
+              <div className="mt-10 flex items-center gap-4">
+                <img src={reviews[0].avatar} alt={reviews[0].name} className="h-14 w-14 rounded-full object-cover" />
+                <div>
+                  <h3 className="font-bold text-white">{reviews[0].name}</h3>
+                  <p className="text-sm font-semibold text-slate-300">{reviews[0].role}</p>
+                </div>
+              </div>
+            </article>
+
+            <div className="grid gap-6 lg:col-span-5">
+              {reviews.slice(1).map((review) => (
+                <article key={review.id} className="rounded-2xl border border-slate-100 bg-white p-7 shadow-card">
+                  <div className="mb-5 flex gap-1 text-amber-500" role="img" aria-label={`${review.rating} dari 5 bintang`}>
+                    {Array.from({ length: review.rating }).map((_, index) => (
+                      <Star key={index} className="h-4 w-4 fill-current" aria-hidden="true" />
+                    ))}
+                  </div>
+                  <p className="text-base leading-relaxed text-slate-700">"{review.review}"</p>
+                  <div className="mt-7 flex items-center gap-4 border-t border-slate-100 pt-6">
+                    <img src={review.avatar} alt={review.name} className="h-12 w-12 rounded-full object-cover" />
+                    <div>
+                      <h3 className="font-bold text-slate-900">{review.name}</h3>
+                      <p className="text-sm font-semibold text-slate-500">{review.role}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+        </div>
+      </Section>
+
+      <Section surface="card" density="default" container="site">
+        <div className="section-header-gap flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeader
+            align="left"
+            eyebrow="Blog & Artikel"
+            title="Insight perjalanan sebelum menentukan tanggal."
+          />
+          <a
+            href="/blog"
+            onClick={(e) => handleAnchorNav(e, () => onNavigate('/blog'))}
+            className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-5 py-3 font-bold text-slate-900 transition-colors hover:bg-slate-50 md:self-auto"
+          >
+            Semua artikel
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
+            <div className="lg:col-span-8">
+              {recentArticles[0] && (
+                <ArticlePreview article={recentArticles[0]} featured onNavigate={onNavigate} />
+              )}
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 md:p-8 lg:col-span-4">
+              {recentArticles.slice(1).map((article) => (
+                <ArticlePreview key={article.id} article={article} onNavigate={onNavigate} />
+              ))}
+            </div>
+          </div>
+      </Section>
+
+      <Section id="faq" surface="page" density="default" container="content" bordered>
+        <SplitSection ratio="5-7" mediaPosition="right" align="start">
+          <SectionHeader
+            align="left"
+            eyebrow="FAQ"
+            title="Jawaban cepat sebelum Anda menghubungi admin."
+            description="Kalau kebutuhan rombongan Anda lebih spesifik, tim admin bisa bantu susun opsi paket lewat WhatsApp setelah Anda mengirim jumlah peserta dan tanggal rencana."
+          />
+          <Accordion items={HOME_FAQ_ITEMS} />
+        </SplitSection>
+      </Section>
+
+      <FinalCTA
+        onWhatsApp={() => onTanyaAdmin(generalInquiryMessage)}
+        onNavigate={onNavigate}
+      />
     </div>
-  </div>
-  </section>
-
- {/* 8. LATEST SEO BLOG POSTS */}
- <Section className="bg-white">
- <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12 lg:mb-16">
- <div className="space-y-4 max-w-3xl">
- <Eyebrow>Blog & Artikel</Eyebrow>
- <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight font-display ">
- Tips & Rekomendasi Menarik Wisata
- </h2>
- </div>
- 
- <button 
- onClick={() => onNavigate('/blog')}
- className="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition tracking-wide pb-2"
- >
- Lihat Semua Artikel
- <ArrowRight className="w-4 h-4" />
- </button>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
- {recentArticles.map((art, index) => (
- <Card
- id={`home-blog-card-${art.id}`}
- key={art.id}
- onClick={() => onNavigate(`/blog/${art.slug}`)}
- animateIndex={index}
- className="group hover:-translate-y-1 hover:shadow-md overflow-hidden"
- >
- <div className="relative aspect-[16/10] w-full">
- <img 
- src={art.imageUrl} 
- alt={art.title} 
- className="absolute inset-0 w-full h-full object-cover rounded-t-lg transition-transform duration-700 ease-out" 
- referrerPolicy="no-referrer"
- />
- <div className="absolute inset-0 rounded-t-lg bg-gradient-to-t from-slate-900/40 to-transparent pointer-events-none"></div>
- <span className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm tracking-wide">
- {art.category}
- </span>
- </div>
- 
- <div className="p-5 md:p-6 flex-1 flex flex-col justify-between">
- <div>
- <h3 className="font-display font-bold text-slate-900 text-xl leading-snug group-hover:text-primary-blue transition-colors duration-300 mb-4">
- {art.title}
- </h3>
- 
- <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6 font-sans">
- {art.excerpt}
- </p>
- </div>
- 
- <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-100 pt-6 mt-2">
- <span className="font-medium">{art.published_at}</span>
- <span className="text-slate-900 font-semibold flex items-center gap-1.5 group-hover:text-primary-blue transition-colors">
- Baca 
- <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
- </span>
- </div>
- </div>
- </Card>
- ))}
- </div>
- </Section>
- </div>
- );
+  );
 }
