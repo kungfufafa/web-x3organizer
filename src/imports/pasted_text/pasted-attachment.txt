@@ -1,0 +1,297 @@
+/x3-build
+
+MODIFY THE EXISTING IMPLEMENTATION NOW.
+
+Do not create a new plan.
+Do not rebuild the entire website.
+Do not change the approved desktop design.
+Do not replace existing content, routes, components, or visual
+direction unless required by this mobile navigation change.
+
+The current mobile version still feels like a conventional responsive
+website. Transform the mobile experience into a polished mobile
+web-app experience while preserving the website's marketing purpose.
+
+SCOPE
+
+Apply this change only to mobile viewport widths up to 767px.
+
+Tablet and desktop must retain the existing website navigation and
+layout unless a small compatibility adjustment is required.
+
+MOBILE APP SHELL
+
+Create a dedicated mobile app shell consisting of:
+
+1. Minimal top app bar
+2. Scrollable page content
+3. Fixed bottom navigation
+4. Mobile menu sheet for secondary pages
+5. Correct safe-area handling
+
+MOBILE TOP APP BAR
+
+Replace the current full desktop-style mobile header with a minimal
+app bar.
+
+The app bar should contain:
+
+- X3 Organizer logo on the left
+- Current page title when useful
+- Compact menu button on the right
+
+Keep it bright, clean, and lightweight.
+
+Do not place the full desktop navigation inside the mobile header.
+
+The menu button must open an accessible mobile sheet containing:
+
+- Destinasi
+- Pengalaman
+- Travel Insights
+- Tentang X3
+- Kontak
+
+The sheet must:
+
+- Slide smoothly from the bottom or side
+- Have a visible close button
+- Close after navigation
+- Close when the overlay is tapped
+- Support keyboard and focus behavior
+- Respect reduced-motion settings
+
+FIXED MOBILE BOTTOM NAVIGATION
+
+Create a fixed bottom navigation with five positions:
+
+1. Beranda
+   Icon: Home
+   Route: /
+
+2. Layanan
+   Icon: Grid or Compass
+   Route: /layanan
+
+3. Konsultasi
+   Icon: MessageCircle
+   Action: contextual WhatsApp consultation
+   Displayed as the elevated central primary action
+
+4. Paket
+   Icon: Luggage or MapPinned
+   Route: /paket
+
+5. Inspirasi
+   Icon: Map or Sparkles
+   Route: /destinasi
+
+CENTRAL CONSULTATION ACTION
+
+Make Konsultasi the central and visually dominant action.
+
+Use:
+
+- A circular or softly rounded elevated button
+- Brand gold as the primary accent
+- Navy icon with accessible contrast
+- A small visible text label below or directly connected to the action
+
+Do not make it oversized or visually aggressive.
+
+The WhatsApp action must use the existing configurable placeholder:
+
+WHATSAPP_NUMBER = "CLIENT_WHATSAPP_NUMBER"
+
+Use a short editable prefilled message:
+
+“Halo X3 Organizer, saya ingin berkonsultasi mengenai rencana
+perjalanan.”
+
+Do not display an additional floating WhatsApp button on mobile because
+it would duplicate the central bottom navigation action.
+
+The existing desktop WhatsApp behavior may remain unchanged.
+
+BOTTOM NAVIGATION VISUAL STYLE
+
+The navigation must feel like a premium travel application:
+
+- White or very light background
+- Subtle top border or soft shadow
+- Navy inactive icons
+- Brand blue or navy active state
+- Gold reserved mainly for the central consultation action
+- Clear active route indicator
+- Short labels beneath icons
+- No glassmorphism
+- No heavy gradient
+- No excessive pill containers
+
+Use the existing X3 design tokens.
+
+Suggested behavior:
+
+- Height approximately 68–76px before safe-area inset
+- Touch targets at least 44px
+- Compact icon size
+- Short readable labels
+- High z-index
+- Smooth but restrained active-state transition
+
+SAFE AREA AND CONTENT SPACING
+
+Support devices with bottom safe areas using:
+
+env(safe-area-inset-bottom)
+
+The bottom navigation must include safe-area padding.
+
+Add sufficient bottom padding to all mobile page content so that:
+
+- The final CTA is not covered
+- Form buttons remain visible
+- Footer content is reachable
+- FAQ items are not hidden
+- No link is blocked by the navigation
+
+Do not create horizontal overflow.
+
+ACTIVE ROUTE STATE
+
+The correct navigation item must automatically become active based on
+the current route.
+
+Examples:
+
+- / and homepage → Beranda
+- /layanan and all /layanan/* routes → Layanan
+- /paket and /paket/* → Paket
+- /destinasi and relevant inspiration routes → Inspirasi
+
+For routes such as:
+
+- /pengalaman
+- /blog
+- /tentang
+- /kontak
+
+do not incorrectly mark another unrelated route as active.
+
+These pages can show no active bottom item or use a carefully defined
+Inspirasi state only when semantically appropriate.
+
+MOBILE HOMEPAGE FEEL
+
+Adjust the mobile homepage composition so it feels intentionally
+designed for mobile, not merely stacked desktop sections.
+
+Without changing the approved content:
+
+- Reduce oversized desktop whitespace
+- Use a more compact hero
+- Keep the primary message visible in the first viewport
+- Use horizontal swipe rails only where beneficial, such as featured
+  packages, destinations, or travel insights
+- Keep service choices easy to tap
+- Use clear section headers with optional “Lihat semua” links
+- Preserve visual breathing room
+- Do not convert every section into cards
+- Do not hide important content only inside carousels
+
+The homepage must still function as a marketing website, not imitate
+an authenticated dashboard.
+
+MOBILE SERVICE AND CONTENT PAGES
+
+On mobile:
+
+- Use a compact page header
+- Keep breadcrumbs minimal or hide redundant breadcrumb text
+- Keep contextual CTA sections above the bottom navigation
+- Ensure forms and accordions remain comfortable to use
+- Avoid overly long full-width paragraphs
+- Keep cards and content blocks visually consistent with the app shell
+
+INTERACTION REQUIREMENTS
+
+Implement and test:
+
+- Bottom navigation route changes
+- Active navigation states
+- Mobile sheet opening and closing
+- Central WhatsApp consultation action
+- Browser back navigation
+- Scroll behavior
+- Form interaction above the fixed navigation
+- FAQ accordion above the fixed navigation
+- Orientation changes
+- Reduced-motion behavior
+
+ACCESSIBILITY
+
+Ensure:
+
+- Navigation has an accessible label
+- Every icon has a visible text label
+- Active item uses more than color alone
+- Focus states are visible
+- Menu sheet traps focus appropriately
+- Escape closes the sheet when supported
+- All controls are keyboard accessible
+- Color contrast remains readable
+
+PRESERVE
+
+Do not alter unnecessarily:
+
+- Desktop navbar
+- Approved routes
+- Existing page content
+- Brand palette
+- Existing reusable components
+- Service architecture
+- Package architecture
+- Desktop homepage composition
+- Existing working forms and links
+
+IMPLEMENTATION QUALITY
+
+Create reusable components such as:
+
+- MobileAppBar
+- MobileBottomNavigation
+- MobileNavigationItem
+- MobileMenuSheet
+
+Do not duplicate the navigation markup on every page.
+
+Use route-aware logic and keep navigation configuration in one place.
+
+EXECUTION LOOP
+
+Perform the changes directly:
+
+1. Inspect the current implementation
+2. Implement the mobile app shell
+3. Run the preview at a mobile viewport
+4. Test every bottom navigation item
+5. Test the menu sheet
+6. Test the WhatsApp action
+7. Check pages with long content
+8. Check contact form and FAQ
+9. Fix overlap and safe-area issues
+10. Confirm tablet and desktop remain unchanged
+11. Re-run the preview
+
+Do not respond only with an explanation.
+
+Modify the codebase and show the functioning preview.
+
+After completion, report briefly:
+
+- Mobile components created
+- Routes connected
+- Interactions tested
+- Desktop elements preserved
+- Any remaining limitations
