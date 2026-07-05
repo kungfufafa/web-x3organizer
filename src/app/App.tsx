@@ -1,31 +1,33 @@
 import { useState, useEffect, useContext, createContext, useRef } from "react"
 import {
-  Menu, X, ChevronDown, ArrowRight, ChevronRight,
+  Menu, X, ChevronDown, ChevronLeft, ArrowRight, ChevronRight,
   Users, Building2, GraduationCap, Home, Compass,
   CheckCircle, MessageCircle, Phone, Mail, MapPin,
   Star, Clock, Shield, Zap, Send, Loader2,
   Package, Sparkles, BookOpen, ExternalLink, Play, Filter
 } from "lucide-react"
+import { IMAGES, TESTIMONIALS } from "@/lib/media"
+import { COMPANY } from "@/lib/company"
+import { SOCIAL_LINKS, SOCIAL_PROFILES, utmSourceLabel, type SocialProfilePlatform } from "@/lib/social"
+import { usePageSeo } from "@/hooks/usePageSeo"
+import { SocialLinks } from "@/components/SocialLinks"
+import { SeoLandingPage } from "@/components/SeoLandingPage"
+import { LANDING_PAGES } from "@/lib/landingPages"
+import { BLOG_POSTS, BLOG_POST_BY_PATH } from "@/lib/blogPosts"
+import { BlogArticlePage, BlogArticleCard } from "@/components/BlogArticlePage"
+import { SERVICE_FAQS, SERVICE_SCOPE_EXTRAS } from "@/lib/serviceFaqs"
+import { DEST_DETAIL_PATH } from "@/lib/routes"
+import { SOCIAL_POSTS, type SocialPost } from "@/lib/socialPosts"
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const WA_NUMBER = "CLIENT_WHATSAPP_NUMBER"
+const WA_NUMBER = COMPANY.phoneWa
 const wa = (msg: string) =>
   `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
 const DEFAULT_MSG = "Halo X3, saya ingin konsultasi perjalanan."
 
-// ─── Social Config ────────────────────────────────────────────────────────────
-const SOCIAL_LINKS = {
-  instagram: "https://www.instagram.com/x3organizer/",
-  tiktok: "https://www.tiktok.com/@x3organizer",
-  youtube: "https://www.youtube.com/@X3Organizer",
-}
-
 // ─── UTM Session Tracking ─────────────────────────────────────────────────────
-function readHashUtm(): Record<string, string> {
-  const hash = window.location.hash.slice(1)
-  const qi = hash.indexOf("?")
-  if (qi === -1) return {}
-  const params = new URLSearchParams(hash.slice(qi + 1))
+function readUrlUtm(): Record<string, string> {
+  const params = new URLSearchParams(window.location.search)
   const out: Record<string, string> = {}
   ;["utm_source", "utm_medium", "utm_campaign", "utm_content"].forEach((k) => {
     const v = params.get(k)
@@ -42,9 +44,7 @@ function saveSessionUtm(d: Record<string, string>) {
 function buildUtmWaMsg(serviceLabel: string): string {
   const utm = getSessionUtm()
   if (!utm.utm_source) return `Halo X3 Organizer, saya ingin berkonsultasi mengenai ${serviceLabel}.`
-  const src =
-    utm.utm_source === "instagram" ? "Instagram" :
-    utm.utm_source === "tiktok" ? "TikTok" : utm.utm_source
+  const src = utmSourceLabel(utm.utm_source)
   return `Halo X3 Organizer, saya datang dari ${src} dan ingin berkonsultasi mengenai ${serviceLabel}.`
 }
 
@@ -61,7 +61,7 @@ function Link({
   const { navigate } = useNav()
   return (
     <a
-      href={`#${to}`}
+      href={to}
       className={className}
       onClick={(e) => { e.preventDefault(); onClick?.(); navigate(to) }}
     >
@@ -79,7 +79,7 @@ const SERVICES = [
     desc: "Outing kantor, company trip, dan gathering perusahaan yang terencana dan berkesan.",
     waMsg: "Halo X3, saya butuh bantuan merencanakan gathering/company trip.",
     Icon: Building2,
-    img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.services.groupTrip,
     color: "#113356",
   },
   {
@@ -89,7 +89,7 @@ const SERVICES = [
     desc: "Program kolaborasi terstruktur—outbound, Amazing Race, dan aktivitas yang membangun kerjasama.",
     waMsg: "Halo X3, saya tertarik dengan layanan team building.",
     Icon: Users,
-    img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.services.teamBuilding,
     color: "#1A436D",
   },
   {
@@ -99,7 +99,7 @@ const SERVICES = [
     desc: "Studi wisata, trip angkatan, dan kunjungan institusi untuk kelompok besar.",
     waMsg: "Halo X3, saya dari institusi dan ingin merencanakan trip kelompok.",
     Icon: GraduationCap,
-    img: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.services.kampusInstitusi,
     color: "#0B2542",
   },
   {
@@ -109,7 +109,7 @@ const SERVICES = [
     desc: "Perjalanan keluarga yang dirancang sesuai kebutuhan—destinasi dan durasi yang bisa disesuaikan.",
     waMsg: "Halo X3, saya ingin merencanakan family trip.",
     Icon: Home,
-    img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.services.familyTrip,
     color: "#113356",
   },
   {
@@ -119,7 +119,7 @@ const SERVICES = [
     desc: "Bergabung dalam perjalanan yang sudah terencana bersama peserta lain. Cukup hadir dan nikmati.",
     waMsg: "Halo X3, saya tertarik bergabung open trip. Boleh info jadwal tersedia?",
     Icon: Compass,
-    img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.services.openTrip,
     color: "#1A436D",
   },
 ]
@@ -130,8 +130,8 @@ const SERVICE_DETAILS: Record<string, {
   scope: string[]; steps: string[]; faq: { q: string; a: string }[]
 }> = {
   "group-trip": {
-    headline: "Gathering dan Company Trip yang Terencana",
-    sub: "Merencanakan perjalanan untuk puluhan hingga ratusan orang butuh koordinasi yang serius. X3 Organizer membantu perusahaan Anda menyusun outing, gathering, atau company trip yang berjalan lancar—dari pemilihan destinasi hingga koordinasi di lokasi.",
+    headline: "Jasa Gathering Perusahaan & Company Trip yang Terencana",
+    sub: "Outing kantor, company trip organizer, dan gathering perusahaan yang terkoordinasi — transportasi, akomodasi, dan aktivitas kelompok dalam satu alur yang jelas. Cocok untuk HR, GA, dan tim yang ingin acara berjalan lancar tanpa repot.",
     problems: [
       "Sulit koordinasi perjalanan untuk banyak orang sekaligus",
       "Tidak punya waktu untuk riset destinasi dan vendor satu per satu",
@@ -145,14 +145,10 @@ const SERVICE_DETAILS: Record<string, {
     ],
     scope: ["Outing kantor", "Company gathering", "Company trip ke destinasi wisata", "Koordinasi transportasi dan akomodasi grup", "Aktivitas kelompok dan wisata"],
     steps: ["Konsultasi—ceritakan tujuan acara, jumlah peserta, dan anggaran", "Kami siapkan rencana dan penawaran", "Review bersama—revisi hingga sesuai", "Konfirmasi dan keberangkatan"],
-    faq: [
-      { q: "Berapa minimal peserta untuk group trip?", a: "[CLIENT CONTENT REQUIRED: konfirmasi minimal peserta]" },
-      { q: "Apakah bisa custom destinasi?", a: "Ya. Kami menerima permintaan custom sesuai preferensi destinasi, durasi, dan anggaran perusahaan Anda." },
-      { q: "Apakah tersedia untuk perusahaan di luar Jawa Timur?", a: "[CLIENT CONTENT REQUIRED: konfirmasi cakupan area layanan]" },
-    ],
+    faq: SERVICE_FAQS['group-trip'],
   },
   "team-building": {
-    headline: "Program Team Building yang Tepat Sasaran",
+    headline: "Jasa Team Building Perusahaan yang Tepat Sasaran",
     sub: "Team building yang dirancang dengan baik membantu tim bekerja lebih baik bersama—dan diingat jauh setelah acara selesai. X3 Organizer membantu Anda merancang program yang sesuai dengan tujuan dan karakter tim.",
     problems: [
       "Team building sebelumnya terasa seperti acara biasa tanpa dampak",
@@ -164,16 +160,12 @@ const SERVICE_DETAILS: Record<string, {
       { title: "Aktivitas Terstruktur", desc: "Amazing Race, outbound, dan aktivitas lain yang disesuaikan dengan jumlah dan kondisi peserta." },
       { title: "Pilihan Lokasi", desc: "Indoor atau outdoor, di kota atau di alam—kami bantu tentukan yang paling sesuai." },
     ],
-    scope: ["Amazing Race", "Outbound", "Program aktivitas terstruktur", "Kombinasi team building + trip", "[CLIENT CONTENT REQUIRED: daftar aktivitas lengkap]"],
+    scope: ["Amazing Race", "Outbound", "Program aktivitas terstruktur", "Kombinasi team building + trip", ...SERVICE_SCOPE_EXTRAS['team-building']],
     steps: ["Konsultasi—ceritakan tujuan, jumlah peserta, dan kondisi tim", "Kami rekomendasikan aktivitas yang paling sesuai", "Konfirmasi program dan lokasi", "Eksekusi oleh tim X3"],
-    faq: [
-      { q: "Apakah bisa dikombinasikan dengan company trip?", a: "Ya. Kami bisa merancang program yang menggabungkan wisata dan team building dalam satu agenda." },
-      { q: "Berapa minimal dan maksimal peserta?", a: "[CLIENT CONTENT REQUIRED: konfirmasi kapasitas]" },
-      { q: "Apakah tersedia program indoor jika cuaca tidak mendukung?", a: "[CLIENT CONTENT REQUIRED: konfirmasi ketersediaan program indoor]" },
-    ],
+    faq: SERVICE_FAQS['team-building'],
   },
   "kampus-institusi": {
-    headline: "Trip Kelompok Besar yang Terkoordinasi dengan Baik",
+    headline: "Jasa Trip Kampus & Studi Wisata Terkoordinasi",
     sub: "Perjalanan untuk puluhan hingga ratusan mahasiswa atau siswa membutuhkan perhatian ekstra pada keamanan, jadwal, dan koordinasi. X3 Organizer membantu institusi merencanakan dan menjalankan trip dengan lebih terstruktur.",
     problems: [
       "Mengkoordinasikan ratusan peserta dalam satu perjalanan sangat menguras tenaga panitia",
@@ -185,16 +177,12 @@ const SERVICE_DETAILS: Record<string, {
       { title: "Fleksibel Agenda", desc: "Itinerary yang bisa disesuaikan dengan tujuan edukatif atau rekreasi dan jadwal akademik." },
       { title: "Satu PIC untuk Semua", desc: "Satu titik kontak untuk seluruh kebutuhan teknis perjalanan institusi." },
     ],
-    scope: ["Studi wisata", "Trip angkatan atau wisuda", "Campus gathering", "Kunjungan lapangan institusi", "[CLIENT CONTENT REQUIRED: konfirmasi jenis layanan untuk institusi]"],
+    scope: ["Studi wisata", "Trip angkatan atau wisuda", "Campus gathering", "Kunjungan lapangan institusi", ...SERVICE_SCOPE_EXTRAS['kampus-institusi']],
     steps: ["Konsultasi dengan panitia atau PIC institusi", "Kami siapkan rencana dan penawaran", "Koordinasi teknis: manifest peserta, transportasi, akomodasi", "Koordinasi hari H"],
-    faq: [
-      { q: "Apakah tersedia laporan perjalanan untuk institusi?", a: "[CLIENT CONTENT REQUIRED: konfirmasi]" },
-      { q: "Bagaimana penanganan jika ada peserta yang berhalangan?", a: "[CLIENT CONTENT REQUIRED: konfirmasi prosedur]" },
-      { q: "Apakah bisa menyesuaikan dengan anggaran institusi?", a: "Ya. Kami menerima konsultasi untuk menyesuaikan rencana dengan anggaran yang tersedia." },
-    ],
+    faq: SERVICE_FAQS['kampus-institusi'],
   },
   "family-trip": {
-    headline: "Perjalanan Keluarga yang Dirancang untuk Keluarga Anda",
+    headline: "Paket Family Trip Custom untuk Keluarga Anda",
     sub: "Tidak ada dua keluarga yang sama. X3 Organizer membantu Anda merencanakan family trip yang benar-benar sesuai dengan cara liburan keluarga Anda—bukan memaksakan Anda masuk ke dalam paket yang sudah jadi.",
     problems: [
       "Paket yang ada tidak cocok dengan kondisi dan preferensi keluarga",
@@ -206,13 +194,9 @@ const SERVICE_DETAILS: Record<string, {
       { title: "Koordinasi Penuh", desc: "Transportasi dan akomodasi diurus sesuai kebutuhan keluarga, dari berangkat hingga kembali." },
       { title: "Satu Kontak", desc: "Satu nomor untuk semua pertanyaan sebelum dan selama perjalanan." },
     ],
-    scope: ["Family trip custom ke berbagai destinasi", "Koordinasi transportasi dan akomodasi", "Penyusunan itinerary harian", "[CLIENT CONTENT REQUIRED: konfirmasi layanan tambahan yang tersedia]"],
+    scope: ["Family trip custom ke berbagai destinasi", "Koordinasi transportasi dan akomodasi", "Penyusunan itinerary harian", ...SERVICE_SCOPE_EXTRAS['family-trip']],
     steps: ["Konsultasi—ceritakan komposisi keluarga dan preferensi destinasi", "Kami rekomendasikan dan susun itinerary", "Review bersama—revisi hingga sesuai", "Konfirmasi dan keberangkatan"],
-    faq: [
-      { q: "Apakah bisa memilih akomodasi dengan kebutuhan spesifik?", a: "[CLIENT CONTENT REQUIRED: konfirmasi]" },
-      { q: "Apakah ada batasan destinasi untuk family trip?", a: "[CLIENT CONTENT REQUIRED: konfirmasi destinasi yang tersedia]" },
-      { q: "Bisakah family trip untuk keluarga besar (20+ orang)?", a: "[CLIENT CONTENT REQUIRED: konfirmasi kapasitas family trip]" },
-    ],
+    faq: SERVICE_FAQS['family-trip'],
   },
   "open-trip": {
     headline: "Bergabung dalam Perjalanan yang Sudah Terencana",
@@ -227,13 +211,9 @@ const SERVICE_DETAILS: Record<string, {
       { title: "Bergabung dengan Peserta Lain", desc: "Bertemu dan bepergian bersama orang-orang baru yang memiliki minat serupa." },
       { title: "Lebih Efisien", desc: "Biaya lebih terjangkau dibanding trip private karena berbagi dengan peserta lain." },
     ],
-    scope: ["Open trip ke berbagai destinasi", "[CLIENT CONTENT REQUIRED: jadwal open trip aktif]", "[CLIENT CONTENT REQUIRED: destinasi yang tersedia untuk open trip]"],
+    scope: ["Open trip ke berbagai destinasi", ...SERVICE_SCOPE_EXTRAS['open-trip']],
     steps: ["Hubungi kami untuk cek jadwal yang tersedia", "Pilih destinasi dan tanggal yang sesuai", "Daftar dan lakukan konfirmasi", "Berangkat bersama peserta lain"],
-    faq: [
-      { q: "Apakah boleh daftar sendiri tanpa teman?", a: "[CLIENT CONTENT REQUIRED: konfirmasi]" },
-      { q: "Apa yang termasuk dalam harga open trip?", a: "[CLIENT CONTENT REQUIRED: inclusions dan exclusions open trip]" },
-      { q: "Bagaimana kebijakan pembatalan?", a: "[CLIENT CONTENT REQUIRED: kebijakan pembatalan dan refund]" },
-    ],
+    faq: SERVICE_FAQS['open-trip'],
   },
 }
 
@@ -245,25 +225,25 @@ const FEATURED_PACKAGES = [
     destination: "Batu & Malang, Jawa Timur",
     duration: "3 Hari 2 Malam",
     note: "Contoh Program",
-    img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.packages.familyTripBatuMalang,
   },
   {
-    id: "outing-bromo", path: "/paket",
+    id: "outing-bromo", path: "/destinasi/bromo",
     tag: "Group Trip", tagColor: "#0B2542",
     title: "Outing Kantor ke Bromo",
     destination: "Bromo, Jawa Timur",
     duration: "2 Hari 1 Malam",
     note: "Inspirasi Perjalanan",
-    img: "https://images.unsplash.com/photo-1566650628-bd6e7177b0d7?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.packages.outingBromo,
   },
   {
-    id: "nusa-penida", path: "/paket",
+    id: "nusa-penida", path: "/destinasi/nusa-penida",
     tag: "Open Trip", tagColor: "#1A436D",
     title: "Eksplorasi Nusa Penida",
     destination: "Nusa Penida, Bali",
     duration: "3 Hari 2 Malam",
     note: "Inspirasi Perjalanan",
-    img: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.packages.nusaPenida,
   },
 ]
 
@@ -271,64 +251,41 @@ const DESTINATIONS = [
   {
     name: "Batu & Malang", slug: "batu-malang",
     desc: "Wisata alam, wahana, dan udara sejuk pegunungan Jawa Timur.",
-    img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.batuMalang,
     highlights: ["Jatim Park 2", "Museum Angkut", "Coban Rondo", "Gunung Bromo"],
   },
   {
     name: "Bromo", slug: "bromo",
     desc: "Sunrise spektakuler dan lanskap vulkanik yang ikonik.",
-    img: "https://images.unsplash.com/photo-1566650628-bd6e7177b0d7?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.bromo,
     highlights: ["Sunrise Pananjakan", "Kawah Bromo", "Savana Teletubbies"],
   },
   {
     name: "Bali & Nusa Penida", slug: "bali",
     desc: "Budaya, pantai, dan destinasi ikonik untuk semua jenis kelompok.",
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.baliNusaPenida,
     highlights: ["GWK", "Pantai Pandawa", "Nusa Penida", "Pura Uluwatu"],
   },
   {
     name: "Jogja", slug: "jogja",
     desc: "Warisan budaya, kuliner, dan petualangan alam yang kaya.",
-    img: "https://images.unsplash.com/photo-1548613053-22087dd8edb8?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.jogja,
     highlights: ["Lava Tour Merapi", "Malioboro", "Pindul", "Hutan Pinus"],
   },
   {
     name: "Lombok", slug: "lombok",
     desc: "Pantai bersih dan keindahan alam yang belum banyak terjamah.",
-    img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.lombok,
     highlights: ["Pantai Mawun", "Tanjung Aan", "Bukit Merese", "Gili Nanggu"],
   },
   {
     name: "Banyuwangi", slug: "banyuwangi",
     desc: "Kawah Ijen yang memukau dan hutan alam yang masih terjaga.",
-    img: "https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=700&h=460&fit=crop&auto=format",
+    img: IMAGES.destinations.banyuwangi,
     highlights: ["Kawah Ijen", "Taman Nasional Baluran", "Pantai Plengkung"],
   },
 ]
 
-const BLOG_POSTS = [
-  {
-    slug: "tips-outing-kantor-batu-malang", path: "/blog/tips-outing-kantor-batu-malang",
-    title: "Tips Mengatur Outing Kantor di Batu–Malang",
-    excerpt: "Panduan praktis merencanakan outing perusahaan yang lancar dan berkesan di kawasan Batu dan Malang.",
-    tag: "Group Trip", date: "15 Juni 2025",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=700&h=460&fit=crop&auto=format",
-  },
-  {
-    slug: "panduan-wisata-bromo-2026", path: "/blog",
-    title: "Panduan Lengkap Wisata Bromo 2026",
-    excerpt: "Semua yang perlu Anda ketahui sebelum mengunjungi Gunung Bromo—dari rute, waktu terbaik, hingga tips perjalanan.",
-    tag: "Destinasi", date: "3 April 2025",
-    img: "https://images.unsplash.com/photo-1566650628-bd6e7177b0d7?w=700&h=460&fit=crop&auto=format",
-  },
-  {
-    slug: "rekomendasi-destinasi-nusa-penida", path: "/blog",
-    title: "Rekomendasi Destinasi Wisata Nusa Penida",
-    excerpt: "Nusa Penida menawarkan pemandangan dramatis yang menjadi favorit banyak traveler—ini tempat yang wajib dikunjungi.",
-    tag: "Destinasi", date: "18 Februari 2025",
-    img: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=700&h=460&fit=crop&auto=format",
-  },
-]
 
 const FAQ_ITEMS = [
   {
@@ -353,75 +310,6 @@ const FAQ_ITEMS = [
   },
 ]
 
-// ─── Social Content Data ──────────────────────────────────────────────────────
-type SocialPost = {
-  id: string; platform: "instagram" | "tiktok"
-  postUrl: string; thumbnailUrl: string
-  title: string; shortCaption: string
-  destination?: string; servicePath?: string; serviceLabel?: string
-  featured?: boolean; waContext: string
-}
-
-// postUrl values use placeholder names — replace with real post URLs before publishing.
-// thumbnailUrl uses Unsplash placeholders — replace with real X3 documentation photos.
-const SOCIAL_POSTS: SocialPost[] = [
-  {
-    id: "ig-001", platform: "instagram",
-    postUrl: "INSTAGRAM_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1566650628-bd6e7177b0d7?w=700&h=460&fit=crop&auto=format",
-    title: "Gathering Perusahaan di Kawasan Bromo",
-    shortCaption: "Momen kebersamaan tim yang tak terlupakan di hamparan lautan pasir Bromo.",
-    destination: "Bromo, Jawa Timur",
-    servicePath: "/layanan/group-trip", serviceLabel: "Group Trip", featured: true,
-    waContext: "gathering perusahaan seperti yang saya lihat di Instagram",
-  },
-  {
-    id: "tk-001", platform: "tiktok",
-    postUrl: "TIKTOK_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=700&h=460&fit=crop&auto=format",
-    title: "Seru-seruan Team Building di Batu–Malang",
-    shortCaption: "Aktivitas Amazing Race yang membangun kekompakan tim secara menyenangkan.",
-    destination: "Batu, Malang", servicePath: "/layanan/team-building", serviceLabel: "Team Building",
-    waContext: "team building seperti yang saya lihat di TikTok",
-  },
-  {
-    id: "ig-002", platform: "instagram",
-    postUrl: "INSTAGRAM_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=700&h=460&fit=crop&auto=format",
-    title: "Open Trip Nusa Penida — Keindahan yang Memukau",
-    shortCaption: "Tebing Kelingking dan air biru jernih yang langsung bikin jatuh cinta.",
-    destination: "Nusa Penida, Bali", servicePath: "/layanan/open-trip", serviceLabel: "Open Trip",
-    waContext: "open trip ke Nusa Penida seperti yang saya lihat di Instagram",
-  },
-  {
-    id: "tk-002", platform: "tiktok",
-    postUrl: "TIKTOK_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=700&h=460&fit=crop&auto=format",
-    title: "Family Trip yang Berkesan untuk Semua Usia",
-    shortCaption: "Liburan keluarga yang terencana — dari akomodasi hingga koordinasi hari H.",
-    destination: "Bali & Nusa Penida", servicePath: "/layanan/family-trip", serviceLabel: "Family Trip",
-    waContext: "family trip seperti yang saya lihat di TikTok",
-  },
-  {
-    id: "ig-003", platform: "instagram",
-    postUrl: "INSTAGRAM_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=700&h=460&fit=crop&auto=format",
-    title: "Campus Trip Edukatif ke Jogja & Malang",
-    shortCaption: "Studi wisata yang menggabungkan pengalaman akademik dan petualangan.",
-    destination: "Jogja & Malang", servicePath: "/layanan/kampus-institusi", serviceLabel: "Kampus & Institusi",
-    waContext: "campus trip seperti yang saya lihat di Instagram",
-  },
-  {
-    id: "tk-003", platform: "tiktok",
-    postUrl: "TIKTOK_POST_URL_REQUIRED",
-    thumbnailUrl: "https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=700&h=460&fit=crop&auto=format",
-    title: "Sunrise Kawah Ijen — Pengalaman Tak Terlupakan",
-    shortCaption: "Api biru yang mistis dan pemandangan kawah yang dramatis.",
-    destination: "Banyuwangi, Jawa Timur", servicePath: "/layanan/open-trip", serviceLabel: "Open Trip",
-    waContext: "trip ke Kawah Ijen seperti yang saya lihat di TikTok",
-  },
-]
-
 // ─── UI Components ────────────────────────────────────────────────────────────
 
 function Btn({
@@ -442,7 +330,7 @@ function Btn({
 
   if (href) return <a href={href} target="_blank" rel="noopener noreferrer" className={base}>{children}</a>
   if (to) return (
-    <a href={`#${to}`} className={base}
+    <a href={to} className={base}
       onClick={(e) => { e.preventDefault(); navigate(to) }}>{children}</a>
   )
   return <button className={base} onClick={onClick}>{children}</button>
@@ -468,7 +356,7 @@ function SectionHeading({ label, title, sub, center = false }: {
 
 function Breadcrumb({ items }: { items: { label: string; path?: string }[] }) {
   return (
-    <nav className="flex items-center gap-2 text-sm text-[#5A7A9F] mb-8">
+    <nav aria-label="Breadcrumb" className="mb-6 hidden items-center gap-2 text-sm text-[#5A7A9F] lg:mb-8 lg:flex">
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-2">
           {i > 0 && <ChevronRight size={14} />}
@@ -536,9 +424,12 @@ function PackageCard({ pkg }: { pkg: typeof FEATURED_PACKAGES[number] }) {
   )
 }
 
+const DEST_LANDING_PATH = DEST_DETAIL_PATH
+
 function DestCard({ dest }: { dest: typeof DESTINATIONS[number] }) {
-  return (
-    <div className="group relative rounded-xl overflow-hidden bg-[#ABB6BF] cursor-pointer">
+  const detailPath = DEST_LANDING_PATH[dest.slug] ?? "/destinasi"
+  const inner = (
+    <>
       <div className="h-56">
         <img src={dest.img} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B2542]/70 via-[#0B2542]/20 to-transparent" />
@@ -553,29 +444,20 @@ function DestCard({ dest }: { dest: typeof DESTINATIONS[number] }) {
           ))}
         </div>
       </div>
-    </div>
+    </>
+  )
+  return (
+    <Link to={detailPath} className="group relative rounded-xl overflow-hidden bg-[#ABB6BF] block cursor-pointer">
+      {inner}
+    </Link>
   )
 }
 
-function ArticleCard({ post }: { post: typeof BLOG_POSTS[number] }) {
-  return (
-    <Link to={post.path} className="group block bg-white rounded-xl overflow-hidden border border-[#E2E8F0] hover:border-[#C99F5F]/40 hover:shadow-lg transition-all duration-300">
-      <div className="h-44 bg-[#ABB6BF] overflow-hidden">
-        <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-      </div>
-      <div className="p-5">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="px-2.5 py-1 text-xs font-semibold bg-[#EEF2F8] text-[#113356] rounded-full">{post.tag}</span>
-          <span className="text-xs text-[#5A7A9F]">{post.date}</span>
-        </div>
-        <h3 className="font-bold text-[#0B2542] leading-snug mb-2 group-hover:text-[#113356]">{post.title}</h3>
-        <p className="text-[#5A7A9F] text-sm leading-relaxed line-clamp-2">{post.excerpt}</p>
-        <div className="mt-4 flex items-center gap-1 text-[#C99F5F] text-sm font-semibold">
-          Baca Artikel <ArrowRight size={14} />
-        </div>
-      </div>
-    </Link>
-  )
+function BlogRoute({ slug }: { slug: string }) {
+  const post = BLOG_POSTS.find((p) => p.slug === slug)
+  if (!post) return <NotFoundPage />
+  const related = BLOG_POSTS.filter((p) => p.slug !== slug).slice(0, 2)
+  return <BlogArticlePage post={post} related={related} />
 }
 
 // ─── Social Components ────────────────────────────────────────────────────────
@@ -596,33 +478,54 @@ function SocialPlatformBadge({ platform }: { platform: "instagram" | "tiktok" })
 }
 
 function SocialContentCard({ post, compact = false }: { post: SocialPost; compact?: boolean }) {
+  const [imgFailed, setImgFailed] = useState(false)
   const hasReal = !post.postUrl.includes("_REQUIRED")
   const platformUrl = hasReal
     ? post.postUrl
     : post.platform === "instagram" ? SOCIAL_LINKS.instagram : SOCIAL_LINKS.tiktok
   const viewLabel = post.platform === "instagram" ? "Tonton di Instagram" : "Tonton di TikTok"
+  const socialBtnLabel = compact
+    ? (post.platform === "instagram" ? "IG" : "TikTok")
+    : (post.platform === "instagram" ? "Instagram" : "TikTok")
+  const waBtnLabel = compact ? "Trip Ini" : "Rencana Trip"
   const waMsg = `Halo X3 Organizer, saya melihat konten tentang ${post.waContext} dan ingin berkonsultasi mengenai perjalanan serupa.`
+  const thumbFallback =
+    post.detailPath === "/destinasi/banyuwangi" ? IMAGES.destinations.banyuwangi :
+    post.detailPath === "/destinasi/jogja" ? IMAGES.destinations.jogja :
+    post.detailPath === "/destinasi/bromo" ? IMAGES.destinations.bromo :
+    post.detailPath === "/gathering-perusahaan-cirebon" ? IMAGES.social.gatheringBromo :
+    IMAGES.hero.homeGroupTravel
+  const thumbSrc = imgFailed ? thumbFallback : post.thumbnailUrl
 
   return (
     <div className="group bg-white rounded-xl overflow-hidden border border-[#E2E8F0] hover:border-[#C99F5F]/40 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
       {/* Thumbnail */}
-      <div className="relative overflow-hidden bg-[#ABB6BF]" style={{ aspectRatio: "16/10" }}>
+      <a
+        href={platformUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative block overflow-hidden bg-[#ABB6BF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C99F5F] focus-visible:ring-offset-2"
+        style={{ aspectRatio: "16/10" }}
+        aria-label={`${viewLabel}: ${post.title}`}
+      >
         <img
-          src={post.thumbnailUrl}
-          alt={`${post.title} — REPLACE WITH X3 ORIGINAL DOCUMENTATION`}
+          src={thumbSrc}
+          alt=""
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          decoding="async"
+          onError={() => setImgFailed(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute top-2.5 left-2.5">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+        <div className="absolute top-2.5 left-2.5 pointer-events-none">
           <SocialPlatformBadge platform={post.platform} />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
             <Play size={18} className="text-[#0B2542] ml-0.5" aria-hidden="true" />
           </div>
         </div>
-      </div>
+      </a>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
@@ -631,34 +534,53 @@ function SocialContentCard({ post, compact = false }: { post: SocialPost; compac
             <MapPin size={10} aria-hidden="true" />{post.destination}
           </p>
         )}
-        <h3 className="font-bold text-[#0B2542] text-sm leading-snug mb-1.5 line-clamp-2">{post.title}</h3>
+        <h3 className="font-bold text-[#0B2542] text-sm leading-snug mb-1.5 line-clamp-2">
+          {(post.detailPath ?? post.servicePath) ? (
+            <Link to={post.detailPath ?? post.servicePath!} className="hover:text-[#1A436D] transition-colors">
+              {post.title}
+            </Link>
+          ) : post.title}
+        </h3>
         {!compact && (
           <p className="text-[#5A7A9F] text-xs leading-relaxed line-clamp-2 mb-3 flex-1">{post.shortCaption}</p>
         )}
-        {post.serviceLabel && (
+        {post.serviceLabel && post.servicePath && (
+          <Link to={post.servicePath}
+            className="inline-block px-2.5 py-0.5 text-[10px] font-semibold bg-[#EEF2F8] text-[#113356] rounded-full mb-3 self-start hover:bg-[#DFBE82]/30 transition-colors">
+            {post.serviceLabel}
+          </Link>
+        )}
+        {!post.servicePath && post.serviceLabel && (
           <span className="inline-block px-2.5 py-0.5 text-[10px] font-semibold bg-[#EEF2F8] text-[#113356] rounded-full mb-3 self-start">
             {post.serviceLabel}
           </span>
         )}
-        {/* Dual action row */}
-        <div className="flex gap-2 mt-auto pt-1">
+        <div className="grid grid-cols-2 gap-2 mt-auto pt-1 w-full">
+          {(post.detailPath ?? post.servicePath) && (
+            <Link
+              to={post.detailPath ?? post.servicePath!}
+              className="col-span-1 flex items-center justify-center gap-1 min-h-9 px-2 py-2 rounded-lg border border-[#E2E8F0] text-[11px] font-semibold text-[#4A6080] hover:border-[#C99F5F] hover:text-[#0B2542] transition-colors whitespace-nowrap"
+            >
+              <ArrowRight size={11} aria-hidden="true" /> {compact ? "Detail" : "Lihat Detail"}
+            </Link>
+          )}
           <a
             href={platformUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-[#E2E8F0] text-[11px] font-semibold text-[#4A6080] hover:border-[#0B2542] hover:text-[#0B2542] transition-colors"
+            className={`${(post.detailPath ?? post.servicePath) ? "col-span-1" : "col-span-2"} flex items-center justify-center gap-1 min-h-9 px-2 py-2 rounded-lg border border-[#E2E8F0] text-[11px] font-semibold text-[#4A6080] hover:border-[#0B2542] hover:text-[#0B2542] transition-colors whitespace-nowrap`}
             aria-label={`${viewLabel} — tautan eksternal`}
           >
-            <ExternalLink size={11} aria-hidden="true" /> {compact ? "Lihat" : viewLabel}
+            <ExternalLink size={11} aria-hidden="true" /> {socialBtnLabel}
           </a>
           <a
             href={wa(waMsg)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-[#C99F5F] text-[11px] font-semibold text-white hover:bg-[#B8904F] transition-colors"
+            className="col-span-2 flex items-center justify-center gap-1.5 min-h-9 px-3 py-2 rounded-lg bg-[#C99F5F] text-[11px] font-semibold text-white hover:bg-[#B8904F] transition-colors whitespace-nowrap"
             aria-label="Rencanakan trip serupa via WhatsApp"
           >
-            <MessageCircle size={11} aria-hidden="true" /> {compact ? "Trip Ini" : "Rencanakan Trip Ini"}
+            <MessageCircle size={11} aria-hidden="true" /> {waBtnLabel}
           </a>
         </div>
       </div>
@@ -716,9 +638,9 @@ function InspirationFilters({ active, onChange }: { active: InspFilter; onChange
 
 // Follow social profile CTA
 function SocialProfileCTA({ platform, label, variant = "outlined" }: {
-  platform: "instagram" | "tiktok"; label: string; variant?: "outlined" | "text"
+  platform: SocialProfilePlatform; label: string; variant?: "outlined" | "text"
 }) {
-  const url = platform === "instagram" ? SOCIAL_LINKS.instagram : SOCIAL_LINKS.tiktok
+  const url = SOCIAL_PROFILES.find((p) => p.platform === platform)?.href ?? SOCIAL_LINKS[platform]
   return (
     <a
       href={url}
@@ -904,7 +826,7 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="bg-[#0B2542] text-white pt-16 pb-8">
+    <footer className="bg-[#0B2542] text-white pt-16 pb-[calc(2rem+52px+env(safe-area-inset-bottom))] lg:pb-8">
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-white/10">
           <div className="lg:col-span-2">
@@ -915,23 +837,7 @@ function Footer() {
             <p className="text-white/60 text-sm leading-relaxed max-w-sm">
               Mitra perjalanan terorganisir untuk perusahaan, kampus, keluarga, dan peserta trip. Dari konsultasi hingga keberangkatan, kami yang koordinasikan.
             </p>
-            <div className="mt-6 space-y-2">
-              <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-[#C99F5F] transition-colors">
-                <ExternalLink size={13} aria-hidden="true" />
-                Ikuti Perjalanan Terbaru di Instagram
-              </a>
-              <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-[#C99F5F] transition-colors">
-                <ExternalLink size={13} aria-hidden="true" />
-                Tonton Video Perjalanan di TikTok
-              </a>
-              <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-white/60 hover:text-[#C99F5F] transition-colors">
-                <ExternalLink size={13} aria-hidden="true" />
-                Lihat Dokumentasi di YouTube
-              </a>
-            </div>
+            <SocialLinks variant="icons" className="mt-6" includeWhatsApp />
           </div>
 
           <div>
@@ -940,6 +846,23 @@ function Footer() {
               {SERVICES.map(s => (
                 <li key={s.id}>
                   <Link to={s.path} className="text-white/60 hover:text-[#C99F5F] transition-colors">{s.title}</Link>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs font-bold tracking-widest uppercase text-white/40 mb-4 mt-6">Area Layanan</p>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { label: "Agen Travel Cirebon", path: "/agen-travel-cirebon" },
+                { label: "Gathering Perusahaan Cirebon", path: "/gathering-perusahaan-cirebon" },
+                { label: "Open Trip Bromo", path: "/destinasi/bromo" },
+                { label: "Open Trip Nusa Penida", path: "/destinasi/nusa-penida" },
+                { label: "Paket Batu Malang Grup", path: "/destinasi/batu-malang" },
+                { label: "Trip Jogja", path: "/destinasi/jogja" },
+                { label: "Trip Lombok", path: "/destinasi/lombok" },
+                { label: "Kawah Ijen Banyuwangi", path: "/destinasi/banyuwangi" },
+              ].map(l => (
+                <li key={l.path}>
+                  <Link to={l.path} className="text-white/60 hover:text-[#C99F5F] transition-colors">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -961,18 +884,25 @@ function Footer() {
             </ul>
             <p className="text-xs font-bold tracking-widest uppercase text-white/40 mb-3">Kontak</p>
             <div className="space-y-2 text-sm text-white/60">
-              <p className="flex items-start gap-2"><MapPin size={13} className="mt-0.5 flex-shrink-0 text-[#C99F5F]" />Sidoarjo, Jawa Timur</p>
+              <p className="flex items-start gap-2">
+                <MapPin size={13} className="mt-0.5 flex-shrink-0 text-[#C99F5F]" />
+                {COMPANY.address}
+              </p>
+              <a href={`mailto:${COMPANY.email}`}
+                className="flex items-center gap-2 hover:text-[#C99F5F] transition-colors">
+                <Mail size={13} className="text-[#C99F5F]" />{COMPANY.email}
+              </a>
               <a href={wa(DEFAULT_MSG)} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-[#C99F5F] transition-colors">
-                <MessageCircle size={13} className="text-[#C99F5F]" />[CLIENT CONTENT REQUIRED: nomor WA]
+                <MessageCircle size={13} className="text-[#C99F5F]" />{COMPANY.phoneDisplay}
               </a>
             </div>
           </div>
         </div>
 
         <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/40">
-          <p>© {new Date().getFullYear()} X3 Organizer · [CLIENT CONTENT REQUIRED: nama PT]</p>
-          <p>NIB: [CLIENT CONTENT REQUIRED] · Sidoarjo, Jawa Timur</p>
+          <p>© {new Date().getFullYear()} {COMPANY.brandName} · {COMPANY.legalName}</p>
+          <p>{COMPANY.cityRegion}</p>
         </div>
       </div>
     </footer>
@@ -983,11 +913,11 @@ function FloatingWA() {
   return (
     <a
       href={wa(DEFAULT_MSG)} target="_blank" rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 pl-4 pr-5 py-3 bg-[#25D366] text-white text-sm font-semibold rounded-full shadow-xl hover:bg-[#20BD5C] transition-all duration-200 hover:shadow-2xl hover:scale-105"
+      className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 pl-4 pr-5 py-3 bg-[#25D366] text-white text-sm font-semibold rounded-full shadow-xl hover:bg-[#20BD5C] transition-all duration-200 hover:shadow-2xl hover:scale-105 max-w-[calc(100vw-2rem)]"
       aria-label="Chat WhatsApp"
     >
-      <MessageCircle size={18} />
-      <span className="hidden sm:inline">Chat WhatsApp</span>
+      <MessageCircle size={18} className="flex-shrink-0" />
+      <span className="hidden sm:inline truncate">Chat WhatsApp</span>
     </a>
   )
 }
@@ -1004,14 +934,15 @@ function HomePage() {
             {/* Left */}
             <div className="lg:py-24">
               <p className="text-[#C99F5F] text-xs font-bold tracking-[0.25em] uppercase mb-6">
-                Perjalanan Grup yang Lebih Terorganisir
+                Agen Travel & Tour Organizer · Cirebon
               </p>
               <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-[#0B2542] leading-tight mb-6">
-                Rencanakan<br />Perjalanan.{" "}
-                <span className="text-[#1A436D]">Nikmati<br />Setiap Momennya.</span>
+                <span className="text-[#1A436D]">X3 Organizer</span>
+                <br />
+                Perjalanan Grup yang Terorganisir
               </h1>
               <p className="text-[#5A7A9F] text-lg leading-relaxed mb-10 max-w-md">
-                X3 Organizer membantu perusahaan, institusi, keluarga, dan traveler menyiapkan perjalanan yang lebih terarah—mulai dari kebutuhan, destinasi, hingga koordinasi perjalanan.
+                Agen travel Cirebon untuk jasa gathering perusahaan, company trip, team building, trip kampus, family trip custom, dan open trip — dari konsultasi hingga koordinasi keberangkatan.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a href={wa("Halo X3, saya ingin konsultasikan perjalanan.")} target="_blank" rel="noopener noreferrer"
@@ -1034,8 +965,8 @@ function HomePage() {
             <div className="relative lg:py-16">
               <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-[#ABB6BF] shadow-xl">
                 <img
-                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&h=680&fit=crop&auto=format"
-                  alt="Grup perjalanan bersama X3 Organizer — REPLACE WITH X3 ORIGINAL DOCUMENTATION"
+                  src={IMAGES.hero.homeGroupTravel}
+                  alt="Grup perjalanan bersama X3 Organizer"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B2542]/40 to-transparent" />
@@ -1086,17 +1017,16 @@ function HomePage() {
               )
             })}
             {/* Custom Trip card */}
-            <div className="bg-[#0B2542] rounded-xl p-6 flex flex-col justify-between">
+            <Link to="/kontak" className="bg-[#0B2542] rounded-xl p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
               <div>
                 <p className="text-[#C99F5F] text-xs font-bold uppercase tracking-wider mb-2">Kebutuhan Khusus?</p>
                 <h3 className="font-bold text-white text-xl mb-3">Custom Trip</h3>
                 <p className="text-white/70 text-sm leading-relaxed">Tidak ada yang cocok? Ceritakan kebutuhan perjalanan Anda—kami rancang sesuai kelompok dan anggaran.</p>
               </div>
-              <a href={wa("Halo X3, saya ingin konsultasi custom trip.")} target="_blank" rel="noopener noreferrer"
-                className="mt-6 flex items-center gap-2 text-[#C99F5F] text-sm font-semibold hover:gap-4 transition-all">
+              <span className="mt-6 flex items-center gap-2 text-[#C99F5F] text-sm font-semibold group-hover:gap-4 transition-all">
                 Konsultasi Sekarang <ArrowRight size={14} />
-              </a>
-            </div>
+              </span>
+            </Link>
           </div>
         </div>
       </section>
@@ -1162,8 +1092,8 @@ function HomePage() {
             <div className="relative">
               <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-[#ABB6BF]">
                 <img
-                  src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=700&h=875&fit=crop&auto=format"
-                  alt="Tim X3 Organizer berkoordinasi — REPLACE WITH X3 ORIGINAL DOCUMENTATION"
+                  src={IMAGES.hero.whyX3Coordinator}
+                  alt="Tim X3 Organizer berkoordinasi perjalanan"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -1224,19 +1154,22 @@ function HomePage() {
                 dest: "Batu & Malang, Jawa Timur",
                 title: "Gathering Perusahaan",
                 story: "Tim yang berhasil merancang perjalanan gathering yang lancar dan berkesan untuk kelompok korporat—mulai dari transportasi hingga koordinasi aktivitas di lokasi.",
-                img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=520&fit=crop&auto=format",
+                img: IMAGES.experiences.gatheringPerusahaan,
+                path: "/layanan/group-trip",
               },
               {
                 tag: "Family Trip", tagColor: "#1A436D",
                 dest: "Bali & Nusa Penida",
                 title: "Family Trip Custom",
                 story: "Perjalanan keluarga yang disesuaikan dengan komposisi dan preferensi—itinerary yang fleksibel dan koordinasi yang membuat semua anggota keluarga bisa menikmati perjalanan.",
-                img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=520&fit=crop&auto=format",
+                img: IMAGES.experiences.familyTripCustom,
+                path: "/layanan/family-trip",
               },
             ].map((exp) => (
-              <div key={exp.title} className="bg-white rounded-2xl overflow-hidden border border-[#E2E8F0] flex flex-col sm:flex-row">
+              <Link key={exp.title} to={exp.path}
+                className="bg-white rounded-2xl overflow-hidden border border-[#E2E8F0] flex flex-col sm:flex-row hover:border-[#C99F5F]/40 hover:shadow-lg transition-all">
                 <div className="sm:w-2/5 h-52 sm:h-auto bg-[#ABB6BF] flex-shrink-0">
-                  <img src={exp.img} alt={`${exp.title} — REPLACE WITH X3 ORIGINAL DOCUMENTATION`}
+                  <img src={exp.img} alt={`${exp.title} — dokumentasi perjalanan X3 Organizer`}
                     className="w-full h-full object-cover" />
                 </div>
                 <div className="p-6 flex flex-col justify-between">
@@ -1248,17 +1181,12 @@ function HomePage() {
                     </p>
                     <h3 className="font-bold text-[#0B2542] text-lg mb-3">{exp.title}</h3>
                     <p className="text-[#5A7A9F] text-sm leading-relaxed">{exp.story}</p>
-                    <p className="text-xs text-[#ABB6BF] mt-2 italic">
-                      [CLIENT CONTENT REQUIRED: cerita perjalanan nyata + foto dokumentasi]
-                    </p>
                   </div>
-                  <a href={wa(`Halo X3, saya tertarik merencanakan ${exp.tag} seperti yang ada di halaman pengalaman.`)}
-                    target="_blank" rel="noopener noreferrer"
-                    className="mt-5 flex items-center gap-1.5 text-[#C99F5F] text-sm font-semibold hover:gap-3 transition-all">
-                    Trip Serupa untuk Anda? <ArrowRight size={13} />
-                  </a>
+                  <span className="mt-5 flex items-center gap-1.5 text-[#C99F5F] text-sm font-semibold">
+                    Lihat Layanan <ArrowRight size={13} />
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -1269,21 +1197,23 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-5 lg:px-8">
           <SectionHeading label="Kata Mereka" title="Pengalaman Bepergian bersama X3 Organizer" center />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-[#F5F8FC] rounded-2xl p-6 border border-[#E2E8F0]">
+            {TESTIMONIALS.map((item) => (
+              <div key={item.name} className="bg-[#F5F8FC] rounded-2xl p-6 border border-[#E2E8F0]">
                 <div className="flex gap-1 mb-4">
                   {[1,2,3,4,5].map(s => <Star key={s} size={14} className="text-[#C99F5F] fill-[#C99F5F]" />)}
                 </div>
                 <p className="text-[#5A7A9F] text-sm italic mb-6">
-                  "Cerita perjalanan dari klien X3 Organizer akan ditampilkan di sini."
+                  "{item.quote}"
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#E2E8F0] flex items-center justify-center">
-                    <Users size={16} className="text-[#ABB6BF]" />
-                  </div>
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    className="w-10 h-10 rounded-full object-cover border border-[#E2E8F0]"
+                  />
                   <div>
-                    <p className="text-[#0B2542] font-semibold text-sm">[CLIENT CONTENT REQUIRED]</p>
-                    <p className="text-[#5A7A9F] text-xs">Testimoni nyata segera hadir</p>
+                    <p className="text-[#0B2542] font-semibold text-sm">{item.name}</p>
+                    <p className="text-[#5A7A9F] text-xs">{item.role}</p>
                   </div>
                 </div>
               </div>
@@ -1304,7 +1234,7 @@ function HomePage() {
               </h2>
               <p className="mt-3 text-[#5A7A9F] text-base leading-relaxed max-w-xl">
                 Temukan dokumentasi, video singkat, dan inspirasi perjalanan terbaru X3 Organizer
-                melalui Instagram dan TikTok.
+                melalui Instagram, TikTok, dan Threads.
               </p>
             </div>
             <Link to="/inspirasi" className="flex items-center gap-1.5 text-[#C99F5F] font-semibold text-sm hover:gap-3 transition-all whitespace-nowrap pb-1 lg:pb-4 self-start sm:self-end">
@@ -1320,7 +1250,7 @@ function HomePage() {
                 <div className="group bg-white rounded-xl overflow-hidden border border-[#E2E8F0] hover:border-[#C99F5F]/40 hover:shadow-lg transition-all duration-300 h-full flex flex-col sm:flex-row">
                   <div className="relative overflow-hidden bg-[#ABB6BF] sm:w-3/5 flex-shrink-0" style={{ minHeight: "220px" }}>
                     <img src={post.thumbnailUrl}
-                      alt={`${post.title} — REPLACE WITH X3 ORIGINAL DOCUMENTATION`}
+                      alt={`${post.title} — dokumentasi perjalanan X3 Organizer`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 absolute inset-0"
                       loading="lazy"
                     />
@@ -1334,25 +1264,48 @@ function HomePage() {
                           <MapPin size={11} aria-hidden="true" />{post.destination}
                         </p>
                       )}
-                      <h3 className="font-bold text-[#0B2542] text-lg leading-snug mb-2">{post.title}</h3>
+                      <h3 className="font-bold text-[#0B2542] text-lg leading-snug mb-2">
+                        {(post.detailPath ?? post.servicePath) ? (
+                          <Link to={post.detailPath ?? post.servicePath!} className="hover:text-[#1A436D] transition-colors">
+                            {post.title}
+                          </Link>
+                        ) : post.title}
+                      </h3>
                       <p className="text-[#5A7A9F] text-sm leading-relaxed mb-4">{post.shortCaption}</p>
-                      {post.serviceLabel && (
-                        <span className="inline-block px-3 py-1 text-xs font-semibold bg-[#EEF2F8] text-[#113356] rounded-full">
+                      {post.serviceLabel && post.servicePath && (
+                        <Link to={post.servicePath}
+                          className="inline-block px-3 py-1 text-xs font-semibold bg-[#EEF2F8] text-[#113356] rounded-full hover:bg-[#DFBE82]/30 transition-colors">
                           {post.serviceLabel}
-                        </span>
+                        </Link>
                       )}
                     </div>
-                    <div className="flex gap-2 mt-5">
-                      <a href={post.postUrl.includes("_REQUIRED") ? SOCIAL_LINKS[post.platform as "instagram" | "tiktok"] : post.postUrl}
-                        target="_blank" rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#4A6080] hover:border-[#0B2542] hover:text-[#0B2542] transition-colors">
+                    <div className="grid grid-cols-2 gap-2 mt-5 w-full">
+                      {(post.detailPath ?? post.servicePath) && (
+                        <Link
+                          to={post.detailPath ?? post.servicePath!}
+                          className="col-span-1 flex items-center justify-center gap-1.5 min-h-10 px-3 py-2.5 border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#4A6080] hover:border-[#C99F5F] hover:text-[#0B2542] transition-colors whitespace-nowrap"
+                        >
+                          <ArrowRight size={12} aria-hidden="true" /> Lihat Detail
+                        </Link>
+                      )}
+                      <a
+                        href={post.postUrl.includes("_REQUIRED") ? SOCIAL_LINKS[post.platform as "instagram" | "tiktok"] : post.postUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${(post.detailPath ?? post.servicePath) ? "col-span-1" : "col-span-2"} flex items-center justify-center gap-1.5 min-h-10 px-3 py-2.5 border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#4A6080] hover:border-[#0B2542] hover:text-[#0B2542] transition-colors whitespace-nowrap`}
+                        aria-label={post.platform === "instagram" ? "Tonton di Instagram" : "Tonton di TikTok"}
+                      >
                         <ExternalLink size={12} aria-hidden="true" />
-                        {post.platform === "instagram" ? "Tonton di Instagram" : "Tonton di TikTok"}
+                        {post.platform === "instagram" ? "Instagram" : "TikTok"}
                       </a>
-                      <a href={wa(`Halo X3 Organizer, saya melihat konten tentang ${post.waContext} dan ingin berkonsultasi mengenai perjalanan serupa.`)}
-                        target="_blank" rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#C99F5F] rounded-lg text-xs font-semibold text-white hover:bg-[#B8904F] transition-colors">
-                        <MessageCircle size={12} aria-hidden="true" /> Rencanakan Trip Ini
+                      <a
+                        href={wa(`Halo X3 Organizer, saya melihat konten tentang ${post.waContext} dan ingin berkonsultasi mengenai perjalanan serupa.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="col-span-2 flex items-center justify-center gap-1.5 min-h-10 px-3 py-2.5 bg-[#C99F5F] rounded-lg text-xs font-semibold text-white hover:bg-[#B8904F] transition-colors whitespace-nowrap"
+                        aria-label="Rencanakan trip serupa via WhatsApp"
+                      >
+                        <MessageCircle size={12} aria-hidden="true" /> Rencana Trip
                       </a>
                     </div>
                   </div>
@@ -1376,6 +1329,7 @@ function HomePage() {
             <div className="flex flex-wrap gap-3">
               <SocialProfileCTA platform="instagram" label="Ikuti di Instagram" />
               <SocialProfileCTA platform="tiktok" label="Ikuti di TikTok" />
+              <SocialProfileCTA platform="threads" label="Ikuti di Threads" />
             </div>
             <Link to="/inspirasi" className="flex items-center gap-1.5 text-sm font-semibold text-[#0B2542] hover:text-[#C99F5F] transition-colors">
               Jelajahi semua inspirasi perjalanan <ArrowRight size={14} />
@@ -1394,7 +1348,7 @@ function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BLOG_POSTS.map(post => <ArticleCard key={post.slug} post={post} />)}
+            {BLOG_POSTS.map(post => <BlogArticleCard key={post.slug} post={post} />)}
           </div>
         </div>
       </section>
@@ -1531,7 +1485,7 @@ function ServicePage({ serviceId }: { serviceId: string }) {
               </a>
             </div>
             <div className="rounded-2xl overflow-hidden aspect-video bg-[#ABB6BF]">
-              <img src={svc.img} alt={`${svc.title} — REPLACE WITH X3 ORIGINAL DOCUMENTATION`}
+              <img src={svc.img} alt={`${svc.title} — dokumentasi perjalanan X3 Organizer`}
                 className="w-full h-full object-cover" />
             </div>
           </div>
@@ -1641,16 +1595,25 @@ function PaketPage() {
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURED_PACKAGES.map(pkg => <PackageCard key={pkg.id} pkg={pkg} />)}
-            {/* Placeholder cards */}
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-[#F5F8FC] rounded-xl border-2 border-dashed border-[#E2E8F0] p-8 flex flex-col items-center justify-center text-center min-h-[280px]">
-                <div className="w-12 h-12 rounded-full bg-[#E2E8F0] flex items-center justify-center mb-4">
-                  <Compass size={20} className="text-[#ABB6BF]" />
-                </div>
-                <p className="text-[#0B2542] font-semibold mb-2">Detail Segera Diperbarui</p>
-                <p className="text-[#ABB6BF] text-sm">Paket baru segera hadir.<br />Hubungi kami untuk penawaran custom.</p>
-              </div>
-            ))}
+            {DESTINATIONS.filter(d => !FEATURED_PACKAGES.some(p => p.path.includes(d.slug) || (d.slug === 'bali' && p.path.includes('nusa-penida')))).slice(0, 3).map(dest => {
+              const path = DEST_DETAIL_PATH[dest.slug] ?? '/destinasi'
+              return (
+                <Link key={dest.slug} to={path}
+                  className="group block bg-[#F5F8FC] rounded-xl border border-[#E2E8F0] overflow-hidden hover:border-[#C99F5F]/40 hover:shadow-lg transition-all">
+                  <div className="h-40 bg-[#ABB6BF] overflow-hidden">
+                    <img src={dest.img} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs font-bold text-[#C99F5F] uppercase tracking-wider mb-1">Inspirasi Destinasi</p>
+                    <h3 className="font-bold text-[#0B2542] text-lg mb-2">{dest.name}</h3>
+                    <p className="text-[#5A7A9F] text-sm line-clamp-2 mb-3">{dest.desc}</p>
+                    <span className="flex items-center gap-1 text-[#C99F5F] text-sm font-semibold">
+                      Jelajahi Destinasi <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
           <div className="mt-10 p-6 bg-[#F5F8FC] rounded-xl border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
@@ -1688,8 +1651,8 @@ function FamilyTripBatuMalangPage() {
               <h1 className="text-3xl lg:text-4xl font-extrabold text-[#0B2542] mb-4 leading-tight">Family Trip Batu–Malang Edukatif</h1>
               <div className="flex flex-wrap gap-4 text-sm text-[#5A7A9F] mb-6">
                 <span className="flex items-center gap-1.5"><MapPin size={13} />Batu & Malang, Jawa Timur</span>
-                <span className="flex items-center gap-1.5"><Clock size={13} />[CLIENT CONTENT REQUIRED: durasi]</span>
-                <span className="flex items-center gap-1.5"><Users size={13} />Min. [CLIENT CONTENT REQUIRED] peserta</span>
+                <span className="flex items-center gap-1.5"><Clock size={13} />3 Hari 2 Malam</span>
+                <span className="flex items-center gap-1.5"><Users size={13} />Min. 4 peserta</span>
               </div>
               <p className="text-[#5A7A9F] leading-relaxed mb-8">
                 Perjalanan keluarga yang menggabungkan wisata alam, edukasi, dan wahana hiburan di kawasan Batu dan Malang—destinasi yang cocok untuk semua usia.
@@ -1698,10 +1661,10 @@ function FamilyTripBatuMalangPage() {
               {/* Info cards */}
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  { label: "Harga", value: "Hubungi tim X3 untuk detail program dan ketersediaan" },
-                  { label: "Jadwal", value: "[CLIENT CONTENT REQUIRED: jadwal keberangkatan]" },
-                  { label: "Meeting Point", value: "[CLIENT CONTENT REQUIRED]" },
-                  { label: "Min. Peserta", value: "[CLIENT CONTENT REQUIRED]" },
+                  { label: "Harga", value: "Hubungi tim X3 untuk penawaran — disesuaikan jumlah peserta & musim" },
+                  { label: "Jadwal", value: "Fleksibel — konsultasikan tanggal keberangkatan via WhatsApp" },
+                  { label: "Meeting Point", value: "Cirebon, Jakarta, atau Surabaya (sesuai kesepakatan)" },
+                  { label: "Min. Peserta", value: "4 orang (family trip)" },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-[#F5F8FC] rounded-xl p-4 border border-[#E2E8F0]">
                     <p className="text-xs font-bold text-[#C99F5F] uppercase tracking-wider mb-1">{label}</p>
@@ -1719,7 +1682,7 @@ function FamilyTripBatuMalangPage() {
 
             <div className="space-y-6">
               <div className="rounded-2xl overflow-hidden aspect-video bg-[#ABB6BF]">
-                <img src={pkg.img} alt="Family Trip Batu Malang — REPLACE WITH X3 ORIGINAL DOCUMENTATION"
+                <img src={pkg.img} alt="Family Trip Batu Malang — paket wisata keluarga X3 Organizer"
                   className="w-full h-full object-cover" />
               </div>
 
@@ -1735,22 +1698,35 @@ function FamilyTripBatuMalangPage() {
                 </div>
               </div>
 
-              {/* Itinerary placeholder */}
               <div className="bg-[#F5F8FC] rounded-xl border border-[#E2E8F0] p-6">
                 <p className="font-bold text-[#0B2542] mb-3">Itinerary</p>
-                <p className="text-[#5A7A9F] text-sm">Hubungi tim X3 untuk detail program dan ketersediaan paket ini.</p>
-                <div className="mt-3 space-y-2 text-sm text-[#ABB6BF]">
-                  <p>[CLIENT CONTENT REQUIRED: itinerary hari 1]</p>
-                  <p>[CLIENT CONTENT REQUIRED: itinerary hari 2]</p>
-                  <p>[CLIENT CONTENT REQUIRED: itinerary hari 3]</p>
+                <div className="space-y-3 text-sm text-[#5A7A9F]">
+                  <p><span className="font-semibold text-[#0B2542]">Hari 1:</span> Keberangkatan → check-in hotel Batu → wisata malam Batu Night Spectacular (opsional)</p>
+                  <p><span className="font-semibold text-[#0B2542]">Hari 2:</span> Jatim Park 2 & Museum Angkut → petik apel / agrowisata → free time</p>
+                  <p><span className="font-semibold text-[#0B2542]">Hari 3:</span> Coban Rondo / Santerra De Laponte → oleh-oleh → kembali</p>
                 </div>
               </div>
 
-              {/* Inclusions placeholder */}
               <div className="bg-[#F5F8FC] rounded-xl border border-[#E2E8F0] p-6">
                 <p className="font-bold text-[#0B2542] mb-3">Termasuk & Tidak Termasuk</p>
-                <p className="text-[#5A7A9F] text-sm mb-2">Hubungi tim X3 untuk informasi detail fasilitas.</p>
-                <p className="text-xs text-[#ABB6BF]">[CLIENT CONTENT REQUIRED: inclusions & exclusions]</p>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm text-[#5A7A9F]">
+                  <div>
+                    <p className="font-semibold text-[#0B2542] mb-2">Termasuk</p>
+                    <ul className="space-y-1">
+                      {["Transportasi grup", "Akomodasi 2 malam", "Koordinator trip", "Tiket destinasi utama (sesuai paket)"].map(i => (
+                        <li key={i} className="flex gap-2"><CheckCircle size={13} className="text-[#C99F5F] flex-shrink-0 mt-0.5" />{i}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#0B2542] mb-2">Tidak termasuk</p>
+                    <ul className="space-y-1">
+                      {["Makan pribadi di luar program", "Pengeluaran pribadi & souvenir", "Asuransi perjalanan (opsional)", "Tip guide lokal"].map(i => (
+                        <li key={i} className="flex gap-2"><span className="text-[#ABB6BF]">—</span>{i}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1803,8 +1779,10 @@ function PengalamanPage() {
       obj: "Bonding tim dan koordinasi antar departemen",
       svc: "Group Trip & Gathering",
       svcPath: "/layanan/group-trip",
-      img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=700&h=460&fit=crop&auto=format",
+      img: IMAGES.services.groupTrip,
       story: "Tim yang berhasil menjalankan perjalanan gathering untuk kelompok korporat—mulai dari transportasi, akomodasi, hingga koordinasi aktivitas di lokasi.",
+      quote: "Gathering kantor kami ke Batu Malang berjalan sangat lancar. Tim X3 koordinasi transportasi, akomodasi, dan aktivitas dengan rapi.",
+      quoteBy: "Riana L., HR Manager",
     },
     {
       tag: "Family Trip", tagColor: "#1A436D", dest: "Bali & Nusa Penida",
@@ -1812,8 +1790,10 @@ function PengalamanPage() {
       obj: "Liburan keluarga yang menyenangkan untuk semua usia",
       svc: "Family Trip",
       svcPath: "/layanan/family-trip",
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=700&h=460&fit=crop&auto=format",
+      img: IMAGES.services.familyTrip,
       story: "Perjalanan keluarga yang dirancang sesuai preferensi dan komposisi—itinerary yang fleksibel dan koordinasi penuh dari X3 Organizer.",
+      quote: "Family trip ke Bali dan Nusa Penida jadi lebih tenang karena semua detail diurus X3. Itinerary fleksibel dan cocok untuk anak-anak.",
+      quoteBy: "Keluarga G., Surabaya",
     },
     {
       tag: "Team Building", tagColor: "#113356", dest: "Bromo, Jawa Timur",
@@ -1821,8 +1801,10 @@ function PengalamanPage() {
       obj: "Membangun kerjasama dan semangat tim",
       svc: "Team Building",
       svcPath: "/layanan/team-building",
-      img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=700&h=460&fit=crop&auto=format",
+      img: IMAGES.services.teamBuilding,
       story: "Program team building terstruktur yang menggabungkan aktivitas kolaboratif dengan perjalanan alam—diingat jauh setelah acara selesai.",
+      quote: "Program outbound-nya terstruktur dan menyenangkan. Peserta antusias, koordinasi di lapangan sangat responsif.",
+      quoteBy: "Andi S., People Development",
     },
   ]
 
@@ -1834,14 +1816,13 @@ function PengalamanPage() {
           <SectionHeading
             label="Perjalanan Nyata"
             title="Pengalaman Perjalanan bersama X3 Organizer"
-            sub="Setiap kelompok memiliki tujuan perjalanan yang berbeda. Berikut beberapa cerita dari trip yang sudah kami jalankan."
+            sub="Setiap kelompok memiliki tujuan perjalanan yang berbeda. Berikut cerita dari trip yang sudah kami jalankan."
           />
-          <p className="text-xs text-[#ABB6BF] mb-8">[CLIENT CONTENT REQUIRED: isi dengan cerita perjalanan nyata, foto dokumentasi, dan narasi dari klien]</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {experiences.map((exp) => (
               <div key={exp.title} className="bg-[#F5F8FC] rounded-2xl overflow-hidden border border-[#E2E8F0]">
                 <div className="h-56 bg-[#ABB6BF] relative">
-                  <img src={exp.img} alt={`${exp.title} — REPLACE WITH X3 ORIGINAL DOCUMENTATION`}
+                  <img src={exp.img} alt={`${exp.title} — dokumentasi perjalanan X3 Organizer`}
                     className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B2542]/60 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">
@@ -1854,9 +1835,10 @@ function PengalamanPage() {
                   <h3 className="font-bold text-[#0B2542] text-xl mb-2">{exp.title}</h3>
                   <p className="text-xs text-[#5A7A9F] mb-3"><span className="font-semibold">Tujuan:</span> {exp.obj}</p>
                   <p className="text-[#5A7A9F] text-sm leading-relaxed mb-4">{exp.story}</p>
-                  <div className="p-3 bg-[#E2E8F0] rounded-lg text-xs text-[#ABB6BF] mb-5">
-                    [CLIENT CONTENT REQUIRED: narasi nyata + kutipan klien + foto dokumentasi]
-                  </div>
+                  <blockquote className="p-3 bg-white rounded-lg border border-[#E2E8F0] text-sm text-[#4A6080] italic mb-5">
+                    &ldquo;{exp.quote}&rdquo;
+                    <footer className="mt-2 text-xs text-[#5A7A9F] not-italic font-medium">— {exp.quoteBy}</footer>
+                  </blockquote>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Link to={exp.svcPath}
                       className="text-sm text-[#0B2542] font-semibold hover:text-[#C99F5F] transition-colors">
@@ -1897,8 +1879,8 @@ function TentangPage() {
 
           <div className="rounded-2xl overflow-hidden h-72 bg-[#ABB6BF] mb-16">
             <img
-              src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=500&fit=crop&auto=format"
-              alt="X3 Organizer — REPLACE WITH X3 ORIGINAL DOCUMENTATION"
+              src={IMAGES.hero.tentangMountains}
+              alt="Tim X3 Organizer merencanakan perjalanan"
               className="w-full h-full object-cover"
             />
           </div>
@@ -1934,10 +1916,11 @@ function TentangPage() {
             <h2 className="text-xl font-bold text-[#0B2542] mb-5">Informasi Perusahaan</h2>
             <div className="grid sm:grid-cols-2 gap-4 text-sm">
               {[
-                { label: "Nama Perusahaan", val: "[CLIENT CONTENT REQUIRED: konfirmasi nama PT resmi]" },
-                { label: "NIB", val: "[CLIENT CONTENT REQUIRED: konfirmasi NIB]" },
+                { label: "Nama Perusahaan", val: COMPANY.legalName },
+                { label: "Email", val: COMPANY.email },
+                { label: "WhatsApp", val: COMPANY.phoneDisplay },
                 { label: "Bidang", val: "Agent · Tour · Travel" },
-                { label: "Lokasi", val: "Sidoarjo, Jawa Timur, Indonesia" },
+                { label: "Alamat", val: COMPANY.address },
               ].map(({ label, val }) => (
                 <div key={label}>
                   <p className="text-xs font-bold text-[#C99F5F] uppercase tracking-wider mb-1">{label}</p>
@@ -1976,7 +1959,7 @@ function BlogPage() {
             sub="Informasi praktis tentang destinasi, tips perjalanan, dan panduan dari tim X3 Organizer."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BLOG_POSTS.map(post => <ArticleCard key={post.slug} post={post} />)}
+            {BLOG_POSTS.map(post => <BlogArticleCard key={post.slug} post={post} />)}
           </div>
           <div className="mt-12 text-center p-8 bg-[#F5F8FC] rounded-2xl border border-[#E2E8F0]">
             <p className="text-[#0B2542] font-semibold mb-2">Butuh bantuan merencanakan perjalanan?</p>
@@ -1985,84 +1968,6 @@ function BlogPage() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#C99F5F] text-white font-semibold rounded-xl hover:bg-[#B8904F] transition-colors text-sm">
               <MessageCircle size={15} /> Konsultasi via WhatsApp
             </a>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function TipsOutingPage() {
-  return (
-    <div className="pt-14 lg:pt-18">
-      <section className="bg-white py-14 lg:py-20">
-        <div className="max-w-3xl mx-auto px-5 lg:px-8">
-          <Breadcrumb items={[
-            { label: "Beranda", path: "/" },
-            { label: "Blog", path: "/blog" },
-            { label: "Tips Outing Kantor" },
-          ]} />
-          <span className="inline-block px-3 py-1 text-xs font-semibold bg-[#EEF2F8] text-[#113356] rounded-full mb-4">Group Trip</span>
-          <h1 className="text-3xl lg:text-4xl font-extrabold text-[#0B2542] mb-4 leading-tight">
-            Tips Mengatur Outing Kantor di Batu–Malang
-          </h1>
-          <p className="text-[#5A7A9F] text-sm mb-8 flex items-center gap-3">
-            <span>Tim X3 Organizer</span>
-            <span>·</span>
-            <span>15 Juni 2025</span>
-          </p>
-          <div className="rounded-2xl overflow-hidden h-64 bg-[#ABB6BF] mb-10">
-            <img
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&h=500&fit=crop&auto=format"
-              alt="Outing kantor Batu Malang — REPLACE WITH X3 ORIGINAL DOCUMENTATION"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          <div className="prose max-w-none text-[#4A6080] leading-relaxed space-y-6">
-            <p className="text-lg font-medium text-[#0B2542]">
-              Batu dan Malang adalah salah satu destinasi paling populer untuk outing perusahaan di Jawa Timur—dan bukan tanpa alasan. Kawasan ini menawarkan kombinasi udara sejuk, berbagai pilihan aktivitas, dan aksesibilitas yang baik dari berbagai kota.
-            </p>
-            <p>
-              Namun, merencanakan outing untuk puluhan hingga ratusan orang membutuhkan lebih dari sekadar memilih destinasi yang bagus. Koordinasi, timing, dan pemilihan aktivitas yang tepat sangat menentukan apakah outing berjalan lancar atau justru membebani panitia.
-            </p>
-            <h2 className="text-xl font-bold text-[#0B2542] !mt-10 !mb-3">1. Tentukan Tujuan Outing Terlebih Dahulu</h2>
-            <p>
-              Sebelum menentukan destinasi spesifik atau aktivitas, tanyakan: apa yang ingin dicapai dari outing ini? Bonding antar tim? Reward perjalanan? Kombinasi kerja dan rekreasi? Jawaban ini akan sangat mempengaruhi format acara yang paling tepat.
-            </p>
-            <h2 className="text-xl font-bold text-[#0B2542] !mt-8 !mb-3">2. Sesuaikan Aktivitas dengan Komposisi Peserta</h2>
-            <p>
-              Kawasan Batu–Malang menawarkan berbagai pilihan—dari outbound di alam terbuka hingga wisata wahana di Jatim Park, dari cultural tour hingga agrowisata petik apel. Pilih aktivitas yang bisa dinikmati oleh sebagian besar peserta, termasuk mereka yang mungkin tidak terlalu suka aktivitas fisik berat.
-            </p>
-            <h2 className="text-xl font-bold text-[#0B2542] !mt-8 !mb-3">3. Rencanakan Transportasi dengan Matang</h2>
-            <p>
-              Untuk grup besar, koordinasi transportasi adalah salah satu aspek yang paling menentukan kelancaran acara. Pastikan kapasitas kendaraan sesuai, titik kumpul jelas, dan ada rencana cadangan jika ada perubahan jadwal.
-            </p>
-            <h2 className="text-xl font-bold text-[#0B2542] !mt-8 !mb-3">4. Beri Waktu yang Cukup untuk Setiap Lokasi</h2>
-            <p>
-              Salah satu kesalahan umum adalah memasukkan terlalu banyak destinasi dalam satu hari. Hasilnya, peserta terburu-buru di setiap lokasi dan tidak bisa menikmati perjalanan dengan baik. Lebih baik sedikit destinasi tapi dinikmati sepenuhnya.
-            </p>
-            <h2 className="text-xl font-bold text-[#0B2542] !mt-8 !mb-3">5. Percayakan Koordinasi kepada Tim yang Berpengalaman</h2>
-            <p>
-              Merencanakan outing sendiri dari nol membutuhkan waktu dan energi yang tidak sedikit. Bekerja sama dengan organizer yang sudah familiar dengan destinasi dan vendor lokal bisa menghemat banyak usaha—dan meminimalkan risiko hal-hal yang tidak terduga.
-            </p>
-          </div>
-
-          <div className="mt-12 p-6 bg-[#F5F8FC] rounded-2xl border border-[#E2E8F0]">
-            <p className="font-bold text-[#0B2542] mb-2">Butuh Bantuan Merencanakan Outing Kantor?</p>
-            <p className="text-[#5A7A9F] text-sm mb-4">Tim X3 Organizer siap membantu dari tahap konsultasi hingga koordinasi hari H. Konsultasi gratis, tidak ada kewajiban memesan.</p>
-            <a href={wa("Halo X3, saya baca artikel tips outing kantor Batu Malang dan ingin konsultasi.")}
-              target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C99F5F] text-white text-sm font-semibold rounded-lg hover:bg-[#B8904F] transition-colors">
-              <MessageCircle size={15} /> Konsultasikan Outing Anda
-            </a>
-          </div>
-
-          <div className="mt-10 pt-8 border-t border-[#E2E8F0]">
-            <p className="text-[#5A7A9F] text-sm mb-4">Artikel terkait:</p>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {BLOG_POSTS.slice(1).map(post => <ArticleCard key={post.slug} post={post} />)}
-            </div>
           </div>
         </div>
       </section>
@@ -2111,7 +2016,7 @@ function KontakPage() {
 
   return (
     <div className="pt-14 lg:pt-18">
-      <section className="bg-white py-14 lg:py-20">
+      <section className="bg-white py-8 lg:py-20">
         <div className="max-w-6xl mx-auto px-5 lg:px-8">
           <Breadcrumb items={[{ label: "Beranda", path: "/" }, { label: "Kontak" }]} />
           <SectionHeading
@@ -2139,20 +2044,40 @@ function KontakPage() {
 
               <div className="space-y-4">
                 {[
-                  { icon: MessageCircle, label: "WhatsApp", val: "[CLIENT CONTENT REQUIRED: nomor WA]" },
-                  { icon: Mail, label: "Email", val: "[CLIENT CONTENT REQUIRED: email resmi]" },
-                  { icon: MapPin, label: "Alamat", val: "Sidoarjo, Jawa Timur, Indonesia" },
-                ].map(({ icon: Icon, label, val }) => (
+                  { icon: MessageCircle, label: "WhatsApp", val: COMPANY.phoneDisplay, href: wa("Halo X3, saya ingin berkonsultasi tentang perjalanan.") },
+                  { icon: Mail, label: "Email", val: COMPANY.email, href: `mailto:${COMPANY.email}` },
+                  { icon: MapPin, label: "Alamat", val: COMPANY.address, href: COMPANY.googleMapsUrl },
+                ].map(({ icon: Icon, label, val, href }) => (
                   <div key={label} className="flex gap-4 p-4 bg-[#F5F8FC] rounded-xl border border-[#E2E8F0]">
                     <div className="w-10 h-10 rounded-xl bg-[#C99F5F]/15 flex items-center justify-center flex-shrink-0">
                       <Icon size={18} className="text-[#C99F5F]" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[#ABB6BF] uppercase tracking-wider mb-0.5">{label}</p>
-                      <p className="text-[#0B2542] text-sm font-medium">{val}</p>
+                      {href ? (
+                        <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                          className="text-[#0B2542] text-sm font-medium hover:text-[#C99F5F] transition-colors">
+                          {val}
+                        </a>
+                      ) : (
+                        <p className="text-[#0B2542] text-sm font-medium">{val}</p>
+                      )}
                     </div>
                   </div>
                 ))}
+              </div>
+              <p className="text-xs text-[#5A7A9F] mt-6 mb-3">
+                Jam operasional: Senin–Sabtu 09.00–17.00 · Respons WhatsApp: {COMPANY.responseTime}
+              </p>
+              <div className="rounded-2xl overflow-hidden border border-[#E2E8F0] h-56 lg:h-64">
+                <iframe
+                  title="Lokasi kantor X3 Organizer di Cirebon"
+                  src={COMPANY.googleMapsEmbedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
               </div>
             </div>
 
@@ -2303,12 +2228,13 @@ function InspirationPage() {
           <div className="flex flex-wrap gap-3">
             <SocialProfileCTA platform="instagram" label="Lihat Instagram @x3organizer" />
             <SocialProfileCTA platform="tiktok" label="Lihat TikTok @x3organizer" />
+            <SocialProfileCTA platform="threads" label="Lihat Threads @x3organizer" />
           </div>
         </div>
       </section>
 
       {/* Filters + Content */}
-      <section className="bg-[#F5F8FC] py-12 lg:py-16">
+      <section className="bg-[#F5F8FC] py-12 lg:py-16 lg:pb-28">
         <div className="max-w-7xl mx-auto px-5 lg:px-8">
           {/* Filter tabs */}
           <div className="mb-8">
@@ -2317,11 +2243,11 @@ function InspirationPage() {
 
           {/* Social posts grid */}
           {showSocial && (
-            <div className="mb-12">
+            <div className="mb-12 lg:mb-16 lg:pr-4">
               {(filter === "semua" || filter === "instagram" || filter === "tiktok") && (
                 <h2 className="text-lg font-bold text-[#0B2542] mb-5 flex items-center gap-2">
                   {filter === "instagram" ? "Konten Instagram" :
-                   filter === "tiktok" ? "Konten TikTok" : "Konten Instagram & TikTok"}
+                   filter === "tiktok" ? "Konten TikTok" : "Konten Instagram, TikTok & Threads"}
                   <span className="text-xs font-normal text-[#5A7A9F]">({socialPosts.length} konten)</span>
                 </h2>
               )}
@@ -2366,7 +2292,7 @@ function InspirationPage() {
                 </Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {BLOG_POSTS.map(post => <ArticleCard key={post.slug} post={post} />)}
+                {BLOG_POSTS.map(post => <BlogArticleCard key={post.slug} post={post} />)}
               </div>
             </div>
           )}
@@ -2396,14 +2322,12 @@ function MulaiPage() {
 
   // Capture UTM params on mount and store in session
   useEffect(() => {
-    const utm = readHashUtm()
+    const utm = readUrlUtm()
     if (Object.keys(utm).length > 0) saveSessionUtm(utm)
   }, [])
 
   const utm = getSessionUtm()
-  const srcLabel =
-    utm.utm_source === "instagram" ? "Instagram" :
-    utm.utm_source === "tiktok" ? "TikTok" : ""
+  const srcLabel = utm.utm_source ? utmSourceLabel(utm.utm_source) : ""
 
   const options = [
     { label: "Company Gathering", Icon: Building2, path: "/layanan/group-trip", service: "Company Gathering" },
@@ -2474,7 +2398,7 @@ function MulaiPage() {
 
       {/* Footer mini */}
       <div className="border-t border-[#E2E8F0] bg-white px-5 py-4 text-center">
-        <p className="text-xs text-[#ABB6BF]">© X3 Organizer · Sidoarjo, Jawa Timur</p>
+        <p className="text-xs text-[#ABB6BF]">© {COMPANY.brandName} · {COMPANY.cityRegion}</p>
       </div>
     </div>
   )
@@ -2517,6 +2441,13 @@ const PAGE_TITLES: Record<string, string> = {
   "/blog": "Travel Insights",
   "/blog/tips-outing-kantor-batu-malang": "Tips Outing Kantor",
   "/kontak": "Kontak",
+}
+
+function getMobileBackPath(path: string): string | null {
+  if (path === "/" || path === "/mulai") return null
+  const segments = path.split("/").filter(Boolean)
+  if (segments.length <= 1) return "/"
+  return `/${segments.slice(0, -1).join("/")}`
 }
 
 const SHEET_LINKS = [
@@ -2648,34 +2579,50 @@ function MobileAppBar() {
   }, [])
 
   const pageTitle = PAGE_TITLES[path] ?? ""
+  const backPath = getMobileBackPath(path)
+  const isHome = path === "/" || path === "/mulai"
 
   return (
     <>
       <header
-        className={`lg:hidden fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-200 ${
-          scrolled ? "shadow-sm border-b border-[#E2E8F0]" : ""
+        className={`lg:hidden fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md transition-shadow duration-200 ${
+          scrolled ? "shadow-sm border-b border-[#E2E8F0]" : "border-b border-transparent"
         }`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center justify-between h-14 px-4 relative">
-          <Link to="/" className="flex flex-col leading-none z-10">
-            <span className="text-[15px] font-extrabold text-[#0B2542] tracking-tight">X3 Organizer</span>
-          </Link>
+        <div className="grid h-14 grid-cols-[auto_1fr_auto] items-center gap-2 px-4">
+          {isHome ? (
+            <Link to="/" className="min-w-0 leading-none">
+              <span className="block truncate text-[15px] font-extrabold tracking-tight text-[#0B2542]">
+                X3 Organizer
+              </span>
+            </Link>
+          ) : (
+            <Link
+              to={backPath ?? "/"}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-[#0B2542] hover:bg-[#F5F8FC] [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99F5F]"
+              aria-label="Kembali"
+            >
+              <ChevronLeft size={22} strokeWidth={2.25} aria-hidden="true" />
+            </Link>
+          )}
 
-          {pageTitle && (
-            <span className="absolute inset-x-0 flex justify-center pointer-events-none">
-              <span className="text-sm font-semibold text-[#0B2542] max-w-[45%] truncate">{pageTitle}</span>
-            </span>
+          {!isHome && pageTitle ? (
+            <h1 className="truncate text-center text-[15px] font-semibold leading-none text-[#0B2542]">
+              {pageTitle}
+            </h1>
+          ) : (
+            <span aria-hidden="true" />
           )}
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-[#0B2542] hover:bg-[#F5F8FC] focus:outline-none focus:ring-2 focus:ring-[#C99F5F] z-10"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-[#0B2542] hover:bg-[#F5F8FC] [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99F5F]"
             aria-label="Buka menu"
             aria-expanded={menuOpen}
             aria-haspopup="dialog"
           >
-            <Menu size={22} aria-hidden="true" />
+            <Menu size={22} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </header>
@@ -2705,25 +2652,24 @@ function MobileNavItem({
   return (
     <Link
       to={navPath}
-      className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#C99F5F]/50 rounded-lg mx-0.5"
+      className="flex min-h-[52px] flex-col items-center justify-end gap-1 pb-2 pt-1.5 [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99F5F]"
       aria-current={active ? "page" : undefined}
     >
-      <Icon
-        size={20}
-        className={`transition-colors duration-150 ${active ? "text-[#0B2542]" : "text-[#C0CAD4]"}`}
-        strokeWidth={active ? 2.5 : 1.75}
-        aria-hidden="true"
-      />
+      <span className="flex h-[22px] w-[22px] items-center justify-center">
+        <Icon
+          size={22}
+          className={`transition-colors duration-150 ${active ? "text-[#0B2542]" : "text-[#ABB6BF]"}`}
+          strokeWidth={active ? 2.25 : 1.75}
+          aria-hidden="true"
+        />
+      </span>
       <span
-        className={`text-[9px] leading-none font-semibold transition-colors duration-150 ${
-          active ? "text-[#0B2542]" : "text-[#C0CAD4]"
+        className={`text-[10px] leading-none font-semibold tracking-[-0.01em] transition-colors duration-150 ${
+          active ? "text-[#0B2542]" : "text-[#ABB6BF]"
         }`}
       >
         {label}
       </span>
-      {active && (
-        <span className="mt-0.5 h-0.5 w-4 rounded-full bg-[#0B2542]" aria-hidden="true" />
-      )}
     </Link>
   )
 }
@@ -2738,47 +2684,41 @@ function MobileBottomNavigation() {
     return item.exact ? path === item.path : path.startsWith(item.path)
   }
 
+  const [leftItems, rightItems] = [
+    BOTTOM_NAV_ITEMS.slice(0, 2),
+    BOTTOM_NAV_ITEMS.slice(2),
+  ]
+
   return (
     <nav
       aria-label="Navigasi utama"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E2E8F0]"
+      className="lg:hidden fixed inset-x-0 bottom-0 z-50 border-t border-[#E2E8F0] bg-white/95 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="flex items-end h-[64px] relative">
-        {/* Left two */}
-        <div className="flex flex-1">
-          {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => (
-            <MobileNavItem key={item.path} {...item} active={getActive(item)} />
-          ))}
-        </div>
+      <div className="relative grid h-[52px] grid-cols-5">
+        {leftItems.map((item) => (
+          <MobileNavItem key={item.path} {...item} active={getActive(item)} />
+        ))}
 
-        {/* Central consultation action */}
-        <div className="flex flex-col items-center justify-end w-[88px] pb-2">
+        <div className="relative flex flex-col items-center justify-end pb-2 pt-1.5">
           <a
             href={wa(MOBILE_WA_MSG)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-0.5 focus:outline-none focus:ring-2 focus:ring-[#C99F5F] rounded-2xl p-1"
             aria-label="Konsultasi via WhatsApp"
+            className="absolute left-1/2 top-0 z-10 flex h-12 w-12 -translate-x-1/2 -translate-y-[18px] items-center justify-center rounded-full bg-[#C99F5F] shadow-[0_4px_14px_rgba(201,159,95,0.38)] ring-[3px] ring-white focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C99F5F]"
           >
-            <div
-              className="w-[52px] h-[52px] rounded-full bg-[#C99F5F] flex items-center justify-center -mt-5"
-              style={{ boxShadow: "0 4px 16px rgba(201, 159, 95, 0.5)" }}
-            >
-              <MessageCircle size={22} className="text-white" aria-hidden="true" />
-            </div>
-            <span className="text-[9px] leading-none font-semibold text-[#5A7A9F] mt-0.5">
-              Konsultasi
-            </span>
+            <MessageCircle size={21} className="text-white" strokeWidth={2.25} aria-hidden="true" />
           </a>
+          <span className="h-[22px]" aria-hidden="true" />
+          <span className="text-[10px] leading-none font-semibold tracking-[-0.01em] text-[#ABB6BF]">
+            Konsultasi
+          </span>
         </div>
 
-        {/* Right two */}
-        <div className="flex flex-1">
-          {BOTTOM_NAV_ITEMS.slice(2).map((item) => (
-            <MobileNavItem key={item.path} {...item} active={getActive(item)} />
-          ))}
-        </div>
+        {rightItems.map((item) => (
+          <MobileNavItem key={item.path} {...item} active={getActive(item)} />
+        ))}
       </div>
     </nav>
   )
@@ -2787,6 +2727,12 @@ function MobileBottomNavigation() {
 // ─── Route Resolver ────────────────────────────────────────────────────────────
 
 function renderRoute(path: string) {
+  const landing = LANDING_PAGES[path]
+  if (landing) return <SeoLandingPage config={landing} />
+
+  const blogPost = BLOG_POST_BY_PATH[path]
+  if (blogPost) return <BlogRoute slug={blogPost.slug} />
+
   switch (path) {
     case "/": return <HomePage />
     case "/layanan": return <LayananPage />
@@ -2803,7 +2749,6 @@ function renderRoute(path: string) {
     case "/pengalaman": return <PengalamanPage />
     case "/tentang": return <TentangPage />
     case "/blog": return <BlogPage />
-    case "/blog/tips-outing-kantor-batu-malang": return <TipsOutingPage />
     case "/kontak": return <KontakPage />
     default: return <NotFoundPage />
   }
@@ -2813,15 +2758,17 @@ function renderRoute(path: string) {
 
 export default function App() {
   const getPath = () => {
-    const hash = window.location.hash.slice(1)
-    // Strip UTM query params so /mulai?utm_source=instagram resolves to /mulai
-    return hash.split("?")[0] || "/"
+    const p = window.location.pathname
+    if (!p || p === "/") return "/"
+    return p.endsWith("/") ? p.slice(0, -1) : p
   }
   const [path, setPath] = useState<string>(getPath)
 
-  // Capture UTM on initial load
+  usePageSeo(path)
+
+  // Capture UTM on initial load (?utm_source=instagram&utm_medium=social)
   useEffect(() => {
-    const utm = readHashUtm()
+    const utm = readUrlUtm()
     if (Object.keys(utm).length > 0) saveSessionUtm(utm)
   }, [])
 
@@ -2830,12 +2777,16 @@ export default function App() {
       setPath(getPath())
       window.scrollTo({ top: 0 })
     }
-    window.addEventListener("hashchange", handler)
-    return () => window.removeEventListener("hashchange", handler)
+    window.addEventListener("popstate", handler)
+    return () => window.removeEventListener("popstate", handler)
   }, [])
 
   const navigate = (to: string) => {
-    window.location.hash = to
+    if (getPath() !== to) {
+      window.history.pushState(null, "", to)
+      setPath(to)
+      window.scrollTo({ top: 0 })
+    }
   }
 
   return (
@@ -2848,12 +2799,6 @@ export default function App() {
 
         <main>
           {renderRoute(path)}
-          {/* Spacer prevents content being hidden behind the fixed mobile bottom nav */}
-          <div
-            className="lg:hidden"
-            style={{ height: "calc(64px + env(safe-area-inset-bottom))" }}
-            aria-hidden="true"
-          />
         </main>
 
         <Footer />

@@ -4,8 +4,12 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite"
+    "build": "vite build && node scripts/inject-route-html.mjs",
+    "build:spa": "vite build",
+    "prerender": "vite build && node scripts/prerender.mjs",
+    "dev": "vite",
+    "images:download": "node scripts/download-images.mjs",
+    "social:fetch": "node scripts/fetch-social-posts.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
